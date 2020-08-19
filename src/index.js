@@ -1,0 +1,54 @@
+/* eslint-disable */
+
+import React from 'react';
+import ReactDOM from 'react-dom';
+import './index.css';
+import App from './App';
+import * as serviceWorker from './serviceWorker';
+
+VSS.init({
+  explicitNotifyLoaded: true
+});
+
+VSS.require("TFS/Dashboards/WidgetHelpers", function (WidgetHelpers) {
+  VSS.register("tcx-widget", function () {
+      return {
+          load: function (widgetSettings) {
+              return WidgetHelpers.WidgetStatusHelper.Success();
+          }
+      }
+  });
+
+  // Use an IIFE to create an object that satisfies the IContributedMenuSource contract
+  var menuContributionHandler = (function () {
+    "use strict";
+    return {
+        // This is a callback that gets invoked when a user clicks the newly contributed menu item
+        // The actionContext parameter contains context data surrounding the circumstances of this
+        // action getting invoked.
+        execute: function (actionContext) {
+            alert("Work item sent.");
+        }
+    };
+  }());
+
+  // Associate the menuContributionHandler object with the "myAction" menu contribution from the manifest.
+  VSS.register("tcx-workitem-send", menuContributionHandler);
+
+  VSS.notifyLoadSucceeded();
+});
+
+ReactDOM.render(
+
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+
+  document.getElementById('root')
+);
+
+
+// If you want your app to work offline and load faster, you can change
+// unregister() to register() below. Note this comes with some pitfalls.
+// Learn more about service workers: https://bit.ly/CRA-PWA
+serviceWorker.unregister();

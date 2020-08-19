@@ -1,0 +1,104 @@
+{
+    "manifestVersion": 1,
+    "id": "topcoder-x",
+    "publisher": "afrisalltd",
+    "version": "1.0.1",
+    "name": "Topcoder X",
+    "description": "Topcoder X is an application used by copilots to manage direct tasks.",
+    "public": false,
+    "categories": ["Azure Repos", "Azure Boards"],
+    "targets": [
+        {
+            "id": "Microsoft.VisualStudio.Services"
+        }
+    ],
+    "contributions": [
+        {
+            "id": "tcx-hub",
+            "type": "ms.vss-web.hub",
+            "targets": [
+                "ms.vss-work-web.work-hub-group"
+            ],
+            "properties": {
+                "name": "Topcoder X",
+                "uri": "index.html?context=hub"
+            }
+        },
+        {
+            "id": "tcx-widget",
+            "type": "ms.vss-dashboards-web.widget",
+            "targets": [
+                "ms.vss-dashboards-web.widget-catalog"
+            ],
+            "properties": {
+                "name": "Topcoder X",
+                "description": "Topcoder X widget",
+                "uri": "index.html?context=widget",
+                "catalogIconUrl": "logo192.png",
+                "previewImageUrl": "logo512.png",
+                "supportedSizes": [
+                     {
+                            "rowSpan": 3,
+                            "columnSpan": 6
+                        }
+                    ],
+                "supportedScopes": ["project_team"]
+            }
+        },
+        {
+            "id": "tcx-workitem-send",
+            "type": "ms.vss-web.action",
+            "description": "Send work item to Topcoder",
+            "targets": [
+                "ms.vss-work-web.work-item-query-menu",
+                "ms.vss-work-web.work-item-toolbar-menu",
+                "ms.vss-work-web.work-item-context-menu",
+                "ms.vss-work-web.query-result-work-item-menu",
+                "ms.vss-work-web.backlog-item-menu"
+            ],
+            "properties": {
+                "text": "Send work item to Topcoder",
+                "title": "Send work item to Topcoder",
+                "groupId": "actions",
+                "uri": "action.html"
+            }
+        }        
+    ],
+    "files": [
+        {
+            "path": "build/index.html",
+            "addressable": true,
+            "packagePath": "index.html"
+        },
+        {
+            "path": "build/action.html",
+            "addressable": true,
+            "packagePath": "action.html"
+        },
+        {
+            "path": "build/static",
+            "addressable": true,
+            "packagePath": "static"
+        },
+        {
+            "path": "build/manifest.json",
+            "addressable": true,
+            "packagePath": "manifest.json"
+        },
+        {
+            "path": "build/logo192.png",
+            "addressable": true,
+            "packagePath": "logo192.png"
+        },
+        {
+            "path": "build/logo512.png",
+            "addressable": true,
+            "packagePath": "logo512.png"
+        },
+        {
+            "path": "node_modules/vss-web-extension-sdk/lib",
+            "addressable": true,
+            "packagePath": "lib"
+        }
+    ]
+}
