@@ -2,7 +2,7 @@
     "manifestVersion": 1,
     "id": "topcoder-x",
     "publisher": "afrisalltd",
-    "version": "1.0.1",
+    "version": "1.0.7",
     "name": "Topcoder X",
     "description": "Topcoder X is an application used by copilots to manage direct tasks.",
     "public": false,
@@ -38,8 +38,8 @@
                 "previewImageUrl": "logo512.png",
                 "supportedSizes": [
                      {
-                            "rowSpan": 3,
-                            "columnSpan": 6
+                            "rowSpan": 5,
+                            "columnSpan": 5
                         }
                     ],
                 "supportedScopes": ["project_team"]

@@ -94,6 +94,7 @@ axiosInstance.interceptors.request.use(config => {
       return config
     })
     .catch((err) => {
+      alert('Failed to get token. ' + err.message)
       console.error(err)
     })
 })

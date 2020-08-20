@@ -1,10 +1,7 @@
 import _ from 'lodash'
 import { axiosInstance } from './axiosWithAuth'
 import * as queryString from 'query-string'
-
-const DOMAIN = 'topcoder-dev.com'
-const DEV_API_HOSTNAME = `https://api.${DOMAIN}`
-const PROJECT_API_URL = `${DEV_API_HOSTNAME}/v5/projects`
+import { PROJECT_API_URL } from '../config'
 
 /**
  * Api request for fetching member's projects
