@@ -1,9 +1,6 @@
 import qs from 'qs'
 import { axiosInstance } from './axiosWithAuth'
-
-const DOMAIN = 'topcoder-dev.com'
-const DEV_API_HOSTNAME = `https://api.${DOMAIN}`
-const CHALLENGE_API_URL = `${DEV_API_HOSTNAME}/v5/challenges`
+import { CHALLENGE_API_URL } from '../config'
 
 /**
  * Fetch challenges from v5 API

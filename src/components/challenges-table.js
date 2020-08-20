@@ -49,7 +49,7 @@ const headCells = [
   { id: 'name', numeric: false, disablePadding: false, label: 'Title' },
   { id: 'startDate', numeric: false, disablePadding: false, label: 'Start Date' },
   { id: 'endDate', numeric: false, disablePadding: false, label: 'End Date' },
-  { id: 'state', numeric: false, disablePadding: false, label: 'State' },
+  { id: 'phases', numeric: false, disablePadding: false, label: 'State' },
 ];
 
 function EnhancedTableHead(props) {
@@ -158,10 +158,14 @@ function ChallengeTable(props) {
       page: 1,
       perPage: 50
     }).then((res) => {
-      setData(res.data)
+      setData(res.data.map((row) => {
+        row.phases = row.currentPhaseNames.join(', ');
+        return row;
+      }))
       console.log(JSON.stringify(res.data));
     }).catch((e) => {
       console.error(e)
+      alert('Failed to fetch chellenges. ' + e.message)
     })
   }, []);
 
@@ -235,7 +239,7 @@ function ChallengeTable(props) {
                       </TableCell>
                       <TableCell align="left">{formatDate(row.startDate)}</TableCell>
                       <TableCell align="left">{formatDate(row.endDate)}</TableCell>
-                      <TableCell align="left">{row.currentPhaseNames.join(', ')}</TableCell>
+                      <TableCell align="left">{row.phases}</TableCell>
                     </TableRow>
                   );
                 })}

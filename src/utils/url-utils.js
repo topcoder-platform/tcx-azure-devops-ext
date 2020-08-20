@@ -1,10 +1,13 @@
+import { WEBSITE } from '../config'
+import { WEBSITE_CONNECT } from '../config'
+
 /**
  * Generate direct url for given direct project id
  * @param directProjectId
  * @return string
  */
 function directUrl(directProjectId) {
-  return `https://www.topcoder-dev.com/direct/projectOverview.action?formData.projectId=${directProjectId}`;
+  return `${WEBSITE}/direct/projectOverview.action?formData.projectId=${directProjectId}`;
 }
 
 /**
@@ -13,7 +16,7 @@ function directUrl(directProjectId) {
  * @return string
  */
 function connectUrl(id) {
-  return `https://connect.topcoder-dev.com/projects/${id}`;
+  return `${WEBSITE_CONNECT}/projects/${id}`;
 }
 
 /**
@@ -22,7 +25,7 @@ function connectUrl(id) {
  * @return string
  */
 function challengeUrl(id) {
-  return `https://www.topcoder-dev.com/challenges/${id}`;
+  return `${WEBSITE}/challenges/${id}`;
 }
 
 export { directUrl, connectUrl, challengeUrl };

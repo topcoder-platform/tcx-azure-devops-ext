@@ -1,0 +1,3 @@
+*.vsix
+vss-extension/build
+node_modules/

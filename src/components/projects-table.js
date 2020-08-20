@@ -149,6 +149,7 @@ function ProjectsTable() {
       })
       .catch((e) => {
         console.error(e)
+        alert('Failed to fetch projects. ' + e.message)
     })
   }, []);
 
