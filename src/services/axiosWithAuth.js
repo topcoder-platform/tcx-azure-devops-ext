@@ -5,14 +5,20 @@ import axios from 'axios'
  */
 
 export const getToken = () => {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     VSS.getService(VSS.ServiceIds.ExtensionData).then(function(dataService) { // eslint-disable-line no-undef
       // Get value in user scope
-      dataService.getValue("token", {scopeType: "User"}).then(function(value) {
+      dataService.getValue('access-token', {scopeType: 'User'}).then(function(value) {
+        if (!value) {
+          return reject(new Error('No token saved.'))
+        }
         if (isTokenExpired(value)) {
-          alert('Token is expired. Please provide new token.')
+          alert('Token is expired. Please refresh login.')
         }
         return resolve(value)
+      }).catch(e => {
+        console.error(e)
+        return reject(e)
       });
     });
   })
@@ -34,7 +40,7 @@ function urlBase64Decode(str) {
       break
 
     default:
-      throw 'Illegal base64url string!'
+      throw new Error('Illegal base64url string!')
   }
   return decodeURIComponent(escape(atob(output))) //polyfill https://github.com/davidchambers/Base64.js
 }
@@ -94,7 +100,8 @@ axiosInstance.interceptors.request.use(config => {
       return config
     })
     .catch((err) => {
-      alert('Failed to get token. ' + err.message)
+      alert('Failed to get token. Please login from the account tab.')
       console.error(err)
+      return config
     })
 })
