@@ -128,7 +128,6 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function ChallengeTable(props) {
-  const { status } = props;
   const classes = useStyles();
   const [order, setOrder] = React.useState('asc');
   const [orderBy, setOrderBy] = React.useState('calories');
@@ -137,23 +136,12 @@ function ChallengeTable(props) {
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
   const [data, setData] = React.useState([]);
 
-  const filters = {
-    sortBy: 'updated',
-    sortOrder: 'desc'
-  }
-  // if (!_.isEmpty(filterChallengeName)) {
-  //   filters['name'] = filterChallengeName
-  // }
-  // if (_.isInteger(projectId) && projectId > 0) {
-  //   filters['projectId'] = projectId
-  // }
-  // if (!_.isEmpty(status)) {
-  //   filters['status'] = status === '' ? undefined : _.startCase(status.toLowerCase())
-  // } else if (!(_.isInteger(projectId) && projectId > 0)) {
-    filters['status'] = status
-  // }
-
   React.useEffect(() => {
+    const filters = {
+      sortBy: 'updated',
+      sortOrder: 'desc'
+    }
+    filters['status'] = props.status
     fetchChallenges(filters, {
       page: 1,
       perPage: 50
@@ -167,7 +155,7 @@ function ChallengeTable(props) {
       console.error(e)
       alert('Failed to fetch chellenges. ' + e.message)
     })
-  }, [filters]);
+  }, [props.status]);
 
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === 'asc';

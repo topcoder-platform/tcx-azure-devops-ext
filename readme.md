@@ -19,10 +19,24 @@
 
 - In the Create Publisher form, enter your name in the publisher name field. The ID field should get set automatically based on your name.
 
+### Configuring the extension
+
+The following config parameters are supported, they are defined in `src/config.js` :
+
+| Name | Description | Default |
+| :------------------------------------- | :---------------------------------------- | :------------------------------ |
+| DOMAIN                                   | We can switch it with the topcoder environtment | `topcoder-dev.com`                              |
+| HOST_URL | The extension url. The address of the extension iframe. Change the publisher with your own | `https://{publisher}.gallerycdn.vsassets.io` |
+| AUTH0_URL | The Auth0 URL | `https://topcoder-dev.auth0.com/oauth` |
+| AUTH0_CLIENT_ID | The Auth0 client id |  |
+| AUTH0_SCOPE | The Auth0 scope | `openid profile offline_access` |
+| AUTH0_AUDIENCE | The Auth0 URL | `https://api.topcoder.com/` |
+| POLL_TIMEOUT | How long we'll wait user to complete the login | `5 * 60 * 1000 // 5 mins` |
+| POLL_INTERVAL | The poll interval | `10 * 1000 // 10 seconds` |
 
 ### Building extension package
 
-- Open the extension manifest file (vss-extension/vss-extension.json) and set the value of the publisher field to the ID of your publisher.
+- Open the extension manifest file (vss-extension/vss-extension.json) and set the value of the publisher field to the ID of your publisher. Also, set the HOST_URL in `src/config.js` with your publisher.
 
 - Install node modules:
     ```
