@@ -9,10 +9,9 @@ import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import Typography from '@material-ui/core/Typography';
 import Box from '@material-ui/core/Box';
+import AccountTab from './account-tab';
 import ChallengeTab from './challenges-tab';
 import ProjectsTable from './projects-table'
-import TextField from '@material-ui/core/TextField';
-import Button from '@material-ui/core/Button';
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -65,22 +64,10 @@ const useStyles = makeStyles((theme) => ({
 export default function VerticalTabs() {
   const classes = useStyles();
   const [value, setValue] = React.useState(0);
-  const [token, setToken] = React.useState("");
 
-  const handleChange = (event, newValue) => {
+  const handleChange = (_, newValue) => {
     setValue(newValue);
   };
-
-  React.useEffect(() => {
-    // Get data service
-    VSS.getService(VSS.ServiceIds.ExtensionData).then(function(dataService) { // eslint-disable-line no-undef
-      // Get value in user scope
-      dataService.getValue("token", {scopeType: "User"}).then(function(value) {
-        console.log("User scoped key value is " + value);
-        setToken(value)
-      });
-    });
-  }, []);
 
   return (
     <div className={classes.root}>
@@ -92,29 +79,12 @@ export default function VerticalTabs() {
         aria-label="Vertical tabs example"
         className={classes.tabs}
       >
-        <Tab label="Login" {...a11yProps(0)} />
+        <Tab label="Account" {...a11yProps(0)} />
         <Tab label="Projects" {...a11yProps(1)} />
         <Tab label="Challenges" {...a11yProps(2)} />
       </Tabs>
       <TabPanel value={value} index={0}>
-        <TextField id="filled-basic" label="Token" variant="filled" className={classes.tokenTextEdit} value={token} onChange={
-          e => {
-            setToken(e.target.value)
-          }
-        }/>
-        <br/>
-        <br/>
-        <Button variant="contained" color="primary" onClick={() => { 
-          // Get data service
-          VSS.getService(VSS.ServiceIds.ExtensionData).then(function(dataService) { // eslint-disable-line no-undef
-            // Set value in user scope
-            dataService.setValue("token", this.token, {scopeType: "User"}).then(function(value) {
-              console.log("Set User scoped key value is " + value);
-            });
-          }.bind({token}));
-         }}>
-          Save
-        </Button>
+        <AccountTab />
       </TabPanel>
       <TabPanel value={value} index={1}>
         <ProjectsTable />

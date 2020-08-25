@@ -167,7 +167,7 @@ function ChallengeTable(props) {
       console.error(e)
       alert('Failed to fetch chellenges. ' + e.message)
     })
-  }, []);
+  }, [filters]);
 
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === 'asc';
