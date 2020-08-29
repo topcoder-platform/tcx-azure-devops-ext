@@ -48,7 +48,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 /**
- * Render UI for the widget feature
+ * Render UI for the report widget configuration feature
  */
 function Widget() {
   const classes = useStyles();
