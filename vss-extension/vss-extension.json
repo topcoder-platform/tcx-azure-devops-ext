@@ -62,7 +62,43 @@
                 "groupId": "actions",
                 "uri": "action.html"
             }
-        }        
+        },
+        {
+            "id": "tcx-widget-report",
+            "type": "ms.vss-dashboards-web.widget",
+            "targets": [
+                "ms.vss-dashboards-web.widget-catalog",
+                ".tcx-widget-report.configuration"
+            ],
+            "properties": {
+                "name": "Topcoder X Report",
+                "description": "Topcoder X report widget",
+                "uri": "index.html?context=widget-report",
+                "catalogIconUrl": "logo192.png",
+                "previewImageUrl": "logo512.png",
+                "supportedSizes": [
+                    {
+                        "rowSpan": 3,
+                        "columnSpan": 6
+                    }
+                ],
+                "supportedScopes": [
+                    "project_team"
+                ]
+            }
+        },
+        {
+            "id": "tcx-widget-report.configuration",
+            "type": "ms.vss-dashboards-web.widget-configuration",
+            "targets": [
+                "ms.vss-dashboards-web.widget-configuration"
+            ],
+            "properties": {
+                "name": "Topcoder X Report Widget Configuration",
+                "description": "Configures Topcoder X Report Widget",
+                "uri": "index.html?context=widget-report-configuration"
+            }
+        }
     ],
     "files": [
         {
