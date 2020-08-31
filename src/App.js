@@ -2,6 +2,8 @@ import React from 'react';
 import './App.css';
 import MainTab from './components/main-tab';
 import Widget from './Widget';
+import ReportWidget from './ReportWidget';
+import ReportWidgetConfiguration from './ReportWidgetConfiguration';
 
 /**
  * Main App React hooks function
@@ -23,6 +25,24 @@ function App() {
         <header className="App-header">
         </header>
         <Widget />
+      </div>
+    );
+  }
+  if (context === 'widget-report') {
+    return (
+      <div className="App">
+        <header className="App-header">
+        </header>
+        <ReportWidget />
+      </div>
+    );
+  }
+  else if (context === 'widget-report-configuration') {
+    return (
+      <div className="App">
+        <header className="App-header">
+        </header>
+        <ReportWidgetConfiguration />
       </div>
     );
   }
