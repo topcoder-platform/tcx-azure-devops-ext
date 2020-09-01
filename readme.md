@@ -23,16 +23,16 @@
 
 The following config parameters are supported, they are defined in `src/config.js` :
 
-| Name | Description | Default |
-| :------------------------------------- | :---------------------------------------- | :------------------------------ |
-| DOMAIN                                   | We can switch it with the topcoder environtment | `topcoder-dev.com`                              |
-| HOST_URL | The extension url. The address of the extension iframe. Change the publisher with your own | `https://{publisher}.gallerycdn.vsassets.io` |
-| AUTH0_URL | The Auth0 URL | `https://topcoder-dev.auth0.com/oauth` |
-| AUTH0_CLIENT_ID | The Auth0 client id |  |
-| AUTH0_SCOPE | The Auth0 scope | `openid profile offline_access` |
-| AUTH0_AUDIENCE | The Auth0 URL | `https://api.topcoder.com/` |
-| POLL_TIMEOUT | How long we'll wait user to complete the login | `5 * 60 * 1000 // 5 mins` |
-| POLL_INTERVAL | The poll interval | `10 * 1000 // 10 seconds` |
+| Name | Env Config Name | Description | Default |
+| :------------------------------------- | :---------------------------------------- | :------------------------------ | :------------------------------ |
+| DOMAIN | REACT_APP_DOMAIN                                  | We can switch it with the topcoder environtment | `topcoder-dev.com`                              |
+| HOST_URL | REACT_APP_HOST_URL | The extension url. The address of the extension iframe. Change the publisher with your own | `https://{publisher}.gallerycdn.vsassets.io` |
+| AUTH0_URL | REACT_APP_AUTH0_URL | The Auth0 URL | `https://topcoder-dev.auth0.com/oauth` |
+| AUTH0_CLIENT_ID | REACT_APP_AUTH0_CLIENT_ID | The Auth0 client id |  |
+| AUTH0_SCOPE | REACT_APP_AUTH0_SCOPE | The Auth0 scope | `openid profile offline_access` |
+| AUTH0_AUDIENCE | REACT_APP_AUTH0_AUDIENCE | The Auth0 URL | `https://api.topcoder.com/` |
+| POLL_TIMEOUT | REACT_APP_POLL_TIMEOUT | How long we'll wait user to complete the login. In milisecond. | `5 * 60 * 1000 // 5 mins` |
+| POLL_INTERVAL | REACT_APP_POLL_INTERVAL | The poll interval in milisecond | `10 * 1000 // 10 seconds` |
 
 ### Building extension package
 
