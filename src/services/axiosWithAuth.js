@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { getRefreshedDeviceToken } from './account'
 
 /**
  * Create an axios instance that can make authenticated requests
@@ -13,9 +14,26 @@ export const getToken = () => {
           return reject(new Error('No token saved.'))
         }
         if (isTokenExpired(value)) {
-          alert('Token is expired. Please refresh login.')
+          dataService.getValue('refresh-token', {scopeType: 'User'}).then(function(refreshToken) {
+            if (!refreshToken) {
+              alert('Token is expired. Please refresh login.')
+              return reject(new Error('Refresh token not found.'))
+            }
+            getRefreshedDeviceToken(refreshToken).then(res => {
+              return resolve(res.data.access_token)
+            })
+            .catch(e => {
+              console.error(e);
+              alert('Token is expired. Please refresh login.')
+              return reject(new Error('Refresh token failed.'))
+            })
+          })
+          .catch(e => {
+            alert('Token is expired. Please refresh login.')
+            return reject(new Error('Get refresh token error.'))
+          })
         }
-        return resolve(value)
+        else return resolve(value)
       }).catch(e => {
         console.error(e)
         return reject(e)

@@ -14,7 +14,7 @@ export default function poll(deviceCode) {
       getDeviceToken(deviceCode).then(res => {
         clearInterval(interval)
         if (timeout) clearTimeout(timeout)
-        resolve(res.data.access_token)
+        resolve({token: res.data.access_token, refreshToken: res.data.refresh_token})
       }).catch(e => {
         console.log(e)
       })
