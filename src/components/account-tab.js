@@ -70,8 +70,7 @@ export default function AccountTab() {
       getDeviceAuthentication().then(response => {
         if (response.data) {
           window.open(response.data.verification_uri_complete, "_blank")
-          poll(response.data.device_code).then(token => {
-            // alert('token ' + token)
+          poll(response.data.device_code).then((data) => {
             setLoggedIn(true);
             setLoading(false);
             // Get data service
@@ -80,7 +79,10 @@ export default function AccountTab() {
               dataService.setValue('access-token', this.token, {scopeType: 'User'}).then(function(value) {
                 console.log('Set User scoped key value is ' + value);
               });
-            }.bind({token}));
+              dataService.setValue('refresh-token', this.refreshToken, {scopeType: 'User'}).then(function(value) {
+                console.log('Set User scoped key value is ' + value);
+              });
+            }.bind(data));
           }).catch(e => {
             alert(e)
             setLoading(false);

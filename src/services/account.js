@@ -42,3 +42,16 @@ export function getDeviceToken (deviceCode) {
     device_code: deviceCode
   }))
 }
+
+/**
+ * Api request for getting refreshed token
+ * @param deviceCode the device code from getDeviceAuthentication
+ * @returns {Promise<*>}
+ */
+export function getRefreshedDeviceToken (refreshToken) {
+  return axiosInstance.post(AUTH0_GET_TOKEN_URL, qs.stringify({
+    client_id: AUTH0_CLIENT_ID,
+    grant_type: 'refresh_token',
+    refresh_token: refreshToken
+  }))
+}
