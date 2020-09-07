@@ -90,6 +90,15 @@ If we need to update the extension. We can follow these steps:
 - From the management portal, select your extension from the list, right-click, and choose Update.
 - Drag and drop your file or select click to find your VSIX file, then click Upload.
 
+## CI/CD Configuration
+
+Configure CI/CD on the Github `Secrets` settings
+
+| Name | Description |
+| :------------------------------------- | :---------------------------------------- |
+| PERSONAL_ACCESS_TOKEN | Personal access token generated from the profile setting https://docs.microsoft.com/en-us/azure/devops/extend/publish/command-line?view=azure-devops#acquire-a-pat |
+| PUBLISHER | Extension publisher |
+| SHARED_ACCOUNT | Share extension with |
 
 ## Verification
 
