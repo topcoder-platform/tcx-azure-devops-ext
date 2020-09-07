@@ -1,0 +1,47 @@
+name: Pubish extension on release
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  lint:
+    name: Check for any lint errors
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checking out source code
+        uses: actions/checkout@master
+
+      - name: Setting up nodejs version 10
+        uses: actions/setup-node@v1
+        with:
+          node-version: '10.x'
+      - name: Starting lint check
+        run: |
+          npm install
+          npm run lint
+
+  publish:
+    name: Publish on marketplace
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checking out master branch
+        uses: actions/checkout@master
+        with:
+          ref: master
+      - name: Setting up nodejs version 10
+        uses: actions/setup-node@v1
+        with:
+          node-version: '10.x'
+      - name: Publish to marketplace
+        run: |
+          npm i -g tfx-cli
+          npm install
+          node scripts/build.js
+          rm -rf vss-extension/build
+          mv build/ vss-extension/
+          cd vss-extension/
+          npm install
+          echo '${{ secrets.PERSONAL_ACCESS_TOKEN }}' | tfx extension publish --publisher ${{ secrets.PUBLISHER }} --namifest-globs vss-extension.json --share-with ${{ secrets.SHARED_ACCOUNT }} --rev-version
