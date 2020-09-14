@@ -147,7 +147,9 @@ function ChallengeTable(props) {
       perPage: 50
     }).then((res) => {
       setData(res.data.map((row) => {
-        row.phases = row.currentPhaseNames.join(', ');
+        if (row.currentPhaseNames) {
+          row.phases = row.currentPhaseNames.join(', ');
+        }
         return row;
       }))
       console.log(JSON.stringify(res.data));
