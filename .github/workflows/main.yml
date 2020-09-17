@@ -44,4 +44,4 @@ jobs:
           mv build/ vss-extension/
           cd vss-extension/
           npm install
-          echo '${{ secrets.PERSONAL_ACCESS_TOKEN }}' | tfx extension publish --publisher ${{ secrets.PUBLISHER }} --namifest-globs vss-extension.json --share-with ${{ secrets.SHARED_ACCOUNT }} --rev-version
+          echo '${{ secrets.PERSONAL_ACCESS_TOKEN }}' | tfx extension publish --publisher ${{ secrets.PUBLISHER }} --namifest-globs vss-extension.json --rev-version
