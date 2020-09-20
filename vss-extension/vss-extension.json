@@ -98,6 +98,19 @@
                 "description": "Configures Topcoder X Report Widget",
                 "uri": "index.html?context=widget-report-configuration"
             }
+        },
+        {
+            "id": "tcx-wit-form-group",
+            "type": "ms.vss-work-web.work-item-form-group",
+            "description": "Topcoder X work item form group",
+            "targets": [
+                "ms.vss-work-web.work-item-form"
+            ],
+            "properties": {
+                "name": "Topcoder X",
+                "uri": "index.html?context=wit-form-group",
+                "height": 600
+            }
         }
     ],
     "files": [
