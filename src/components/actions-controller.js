@@ -31,7 +31,8 @@ export default function ActionsController() {
               bodyWithRef = bodyWithRef + '\n\n### Attachments';
               const attachedFiles = _.filter(relations, { 'rel': 'AttachedFile' });
               _.forEach(attachedFiles, function(attachment) {
-                bodyWithRef = bodyWithRef + '\n`<a href="${attachment.url}" download>${attachment.attributes.name}</a>`';
+                bodyWithRef = bodyWithRef + `<a href="${attachment.url}" download>${attachment.attributes.name}</a>`;
+                bodyWithRef = bodyWithRef + '\n'
               });
             }
             const issue = await issues.createIssue({
