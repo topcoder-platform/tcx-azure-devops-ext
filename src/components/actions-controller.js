@@ -24,14 +24,15 @@ export default function ActionsController() {
               token: githubToken
             });
             const issues = github.getIssues(githubRepo.split('/')[0], githubRepo.split('/')[1]);
-            var bodyWithRef = body + '\n\n' + '### Reference ' + buildWorkItemUrl(id); // eslint-disable-line no-useless-concat
+            var bodyWithRef = body + '\n\n### Reference ' + buildWorkItemUrl(id);
             const workItem = await getWorkItemRelations(VSS.getWebContext().host.name + '/' + VSS.getWebContext().project.name, id) // eslint-disable-line no-undef
             const relations = workItem.data.relations;
             if (relations && relations.length > 0) {
-              bodyWithRef = bodyWithRef + '\n\n' + '### Attachments';  // eslint-disable-line no-useless-concat
+              bodyWithRef = bodyWithRef + '\n\n### Attachments';
               const attachedFiles = _.filter(relations, { 'rel': 'AttachedFile' });
               _.forEach(attachedFiles, function(attachment) {
-                bodyWithRef = bodyWithRef + '\n' + `<a href="${attachment.url}" download>${attachment.attributes.name}</a>`;  // eslint-disable-line no-useless-concat
+                bodyWithRef = bodyWithRef + `<a href="${attachment.url}" download>${attachment.attributes.name}</a>`;
+                bodyWithRef = bodyWithRef + '\n'
               });
             }
             const issue = await issues.createIssue({
