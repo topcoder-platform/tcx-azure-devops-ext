@@ -5,6 +5,7 @@ import Widget from './Widget';
 import ReportWidget from './ReportWidget';
 import ReportWidgetConfiguration from './ReportWidgetConfiguration';
 import WITFormGroup from './components/wit-form-group';
+import ActionsController from './components/actions-controller';
 
 /**
  * Main App React hooks function
@@ -53,6 +54,15 @@ function App() {
         <header className="App-header">
         </header>
         <ReportWidgetConfiguration />
+      </div>
+    );
+  }
+  else if (context === 'actions') {
+    return (
+      <div className="App">
+        <header className="App-header">
+        </header>
+        <ActionsController />
       </div>
     );
   }

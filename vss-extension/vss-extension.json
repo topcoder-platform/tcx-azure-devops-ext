@@ -12,6 +12,9 @@
             "id": "Microsoft.VisualStudio.Services"
         }
     ],
+    "scopes": [
+        "vso.work"
+    ],
     "contributions": [
         {
             "id": "tcx-hub",
@@ -60,7 +63,7 @@
                 "text": "Send work item to Topcoder",
                 "title": "Send work item to Topcoder",
                 "groupId": "actions",
-                "uri": "action.html"
+                "uri": "index.html?context=actions"
             }
         },
         {

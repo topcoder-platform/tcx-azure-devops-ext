@@ -6,6 +6,7 @@ const PROJECT_API_URL = `${DEV_API_HOSTNAME}/v5/projects`
 const CHALLENGE_API_URL = `${DEV_API_HOSTNAME}/v5/challenges`
 
 const HOST_URL = process.env.REACT_APP_HOST_URL || 'https://afrisalltd.gallerycdn.vsassets.io'
+const AZURE_URL = process.env.REACT_APP_AZURE_URL || 'https://dev.azure.com'
 
 const AUTH0_URL = process.env.REACT_APP_AUTH0_URL || 'https://topcoder-dev.auth0.com/oauth'
 const AUTH0_DEVICE_CODE_URL = `${AUTH0_URL}/device/code`
@@ -30,5 +31,6 @@ export {
   AUTH0_SCOPE,
   AUTH0_AUDIENCE,
   POLL_TIMEOUT,
-  POLL_INTERVAL
+  POLL_INTERVAL,
+  AZURE_URL
 }
