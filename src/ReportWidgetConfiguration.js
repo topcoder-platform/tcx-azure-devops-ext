@@ -113,7 +113,7 @@ function Widget() {
       <FormControl className={classes.formControl}>
       <InputLabel id="demo-simple-select-helper-label">Select Project</InputLabel>
       <Select
-        MenuProps={{ className: classes.menu }}      
+        MenuProps={{ className: classes.menu }}
         labelId="demo-simple-select-helper-label"
         id="demo-simple-select-helper"
         value={projectId}
