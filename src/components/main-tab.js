@@ -12,6 +12,7 @@ import Box from '@material-ui/core/Box';
 import AccountTab from './account-tab';
 import ChallengeTab from './challenges-tab';
 import ProjectsTable from './projects-table'
+import SettingsTab from './settings-tab'
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -82,6 +83,7 @@ export default function VerticalTabs() {
         <Tab label="Account" {...a11yProps(0)} />
         <Tab label="Projects" {...a11yProps(1)} />
         <Tab label="Challenges" {...a11yProps(2)} />
+        <Tab label="Settings" {...a11yProps(3)} />
       </Tabs>
       <TabPanel value={value} index={0}>
         <AccountTab />
@@ -91,6 +93,9 @@ export default function VerticalTabs() {
       </TabPanel>
       <TabPanel value={value} index={2}>
         <ChallengeTab />
+      </TabPanel>
+      <TabPanel value={value} index={3}>
+        <SettingsTab />
       </TabPanel>
     </div>
   );
