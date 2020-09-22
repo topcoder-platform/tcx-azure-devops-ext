@@ -2,7 +2,7 @@
     "manifestVersion": 1,
     "id": "topcoder-x",
     "publisher": "JustinGasperTopcodertest",
-    "version": "1.0.54",
+    "version": "1.0.55",
     "name": "Topcoder X",
     "description": "Topcoder X is an application used by copilots to manage direct tasks.",
     "public": false,
