@@ -49,9 +49,9 @@
             }
         },
         {
-            "id": "tcx-workitem-send",
+            "id": "tcx-workitem-send-github",
             "type": "ms.vss-web.action",
-            "description": "Send work item to Topcoder",
+            "description": "Send to Github",
             "targets": [
                 "ms.vss-work-web.work-item-query-menu",
                 "ms.vss-work-web.work-item-toolbar-menu",
@@ -60,10 +60,28 @@
                 "ms.vss-work-web.backlog-item-menu"
             ],
             "properties": {
-                "text": "Send work item to Topcoder",
-                "title": "Send work item to Topcoder",
+                "text": "Send to Github",
+                "title": "Send to Github",
                 "groupId": "actions",
-                "uri": "index.html?context=actions"
+                "uri": "index.html?context=actions-send-github"
+            }
+        },
+        {
+            "id": "tcx-workitem-send-topcoder",
+            "type": "ms.vss-web.action",
+            "description": "Send to Topcoder",
+            "targets": [
+                "ms.vss-work-web.work-item-query-menu",
+                "ms.vss-work-web.work-item-toolbar-menu",
+                "ms.vss-work-web.work-item-context-menu",
+                "ms.vss-work-web.query-result-work-item-menu",
+                "ms.vss-work-web.backlog-item-menu"
+            ],
+            "properties": {
+                "text": "Send to Topcoder",
+                "title": "Send to Topcoder",
+                "groupId": "actions",
+                "uri": "index.html?context=actions-send-topcoder"
             }
         },
         {

@@ -3,7 +3,7 @@ import GitHub from 'github-api';
 import { getWorkItemRelations } from '../services/azure'
 import _ from 'lodash'
 
-export default function ActionsController() {
+export default function ActionsGithubController() {
 
   const buildWorkItemUrl = (id) => {
     return 'https://dev.azure.com/' + 
@@ -28,7 +28,7 @@ export default function ActionsController() {
             const workItem = await getWorkItemRelations(VSS.getWebContext().host.name + '/' + VSS.getWebContext().project.name, id) // eslint-disable-line no-undef
             const relations = workItem.data.relations;
             if (relations && relations.length > 0) {
-              bodyWithRef = bodyWithRef + '\n\n### Attachments';
+              bodyWithRef = bodyWithRef + '\n\n### Attachments\n';
               const attachedFiles = _.filter(relations, { 'rel': 'AttachedFile' });
               _.forEach(attachedFiles, function(attachment) {
                 bodyWithRef = bodyWithRef + `<a href="${attachment.url}" download>${attachment.attributes.name}</a>`;
@@ -78,7 +78,7 @@ export default function ActionsController() {
         };
       }());
   
-      VSS.register("tcx-workitem-send", menuContributionHandler); // eslint-disable-line no-undef
+      VSS.register("tcx-workitem-send-github", menuContributionHandler); // eslint-disable-line no-undef
       VSS.notifyLoadSucceeded(); // eslint-disable-line no-undef
     });
   }, []);

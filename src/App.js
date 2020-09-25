@@ -5,7 +5,8 @@ import Widget from './Widget';
 import ReportWidget from './ReportWidget';
 import ReportWidgetConfiguration from './ReportWidgetConfiguration';
 import WITFormGroup from './components/wit-form-group';
-import ActionsController from './components/actions-controller';
+import ActionsGithubController from './components/actions-github-controller';
+import ActionsTopcoderController from './components/actions-topcoder-controller';
 
 /**
  * Main App React hooks function
@@ -57,12 +58,21 @@ function App() {
       </div>
     );
   }
-  else if (context === 'actions') {
+  else if (context === 'actions-send-github') {
     return (
       <div className="App">
         <header className="App-header">
         </header>
-        <ActionsController />
+        <ActionsGithubController />
+      </div>
+    );
+  }
+  else if (context === 'actions-send-topcoder') {
+    return (
+      <div className="App">
+        <header className="App-header">
+        </header>
+        <ActionsTopcoderController />
       </div>
     );
   }

@@ -19,6 +19,18 @@ const AUTH0_AUDIENCE = process.env.REACT_APP_AUTH0_AUDIENCE || `https://api.topc
 const POLL_TIMEOUT = process.env.REACT_APP_POLL_TIMEOUT ? parseInt(process.env.REACT_APP_POLL_TIMEOUT) : 5 * 60 * 1000 // 5 mins
 const POLL_INTERVAL = process.env.REACT_APP_POLL_INTERVAL ? parseInt(process.env.REACT_APP_POLL_INTERVAL) : 10 * 1000 // 10 seconds
 
+const NEW_CHALLENGE_TEMPLATE = process.env.REACT_APP_NEW_CHALLENGE_TEMPLATE || {
+  legacy: {
+    reviewType: 'community',
+    track: 'DEVELOP',
+    directProjectId: 7377
+  },
+  status: 'Draft'
+}
+const TYPE_ID_FIRST2FINISH = process.env.REACT_APP_TYPE_ID_FIRST2FINISH || '927abff4-7af9-4145-8ba1-577c16e64e2e'
+const DEFAULT_TIMELINE_TEMPLATE_ID = process.env.REACT_APP_DEFAULT_TIMELINE_TEMPLATE_ID || '7ebf1c69-f62f-4d3a-bdfb-fe9ddb56861c'
+const DEFAULT_TRACK_ID = process.env.REACT_APP_DEFAULT_TIMELINE_TEMPLATE_ID || '9b6fc876-f4d9-4ccb-9dfd-419247628825'
+
 export {
   WEBSITE,
   HOST_URL,
@@ -32,5 +44,9 @@ export {
   AUTH0_AUDIENCE,
   POLL_TIMEOUT,
   POLL_INTERVAL,
-  AZURE_URL
+  AZURE_URL,
+  NEW_CHALLENGE_TEMPLATE,
+  TYPE_ID_FIRST2FINISH,
+  DEFAULT_TIMELINE_TEMPLATE_ID,
+  DEFAULT_TRACK_ID
 }
