@@ -5,6 +5,7 @@ import Widget from './Widget';
 import ReportWidget from './ReportWidget';
 import ReportWidgetConfiguration from './ReportWidgetConfiguration';
 import WITFormGroup from './components/wit-form-group';
+import WITFormPage from './components/wit-form-page';
 import ActionsGithubController from './components/actions-github-controller';
 import ActionsTopcoderController from './components/actions-topcoder-controller';
 
@@ -46,6 +47,15 @@ function App() {
         <header className="App-header">
         </header>
         <WITFormGroup />
+      </div>
+    );
+  }
+  else if (context === 'wit-form-page') {
+    return (
+      <div>
+        <header className="App-header">
+        </header>
+        <WITFormPage />
       </div>
     );
   }

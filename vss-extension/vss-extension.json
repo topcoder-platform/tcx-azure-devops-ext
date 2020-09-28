@@ -132,6 +132,18 @@
                 "uri": "index.html?context=wit-form-group",
                 "height": 600
             }
+        },
+        {
+            "id": "tcx-wit-form-page",
+            "type": "ms.vss-work-web.work-item-form-page",
+            "description": "Topcoder X Work Item Page",
+            "targets": [
+                "ms.vss-work-web.work-item-form"
+            ],
+            "properties": {
+                "name": "Topcoder X",
+                "uri": "index.html?context=wit-form-page"
+            }
         }
     ],
     "files": [

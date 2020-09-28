@@ -21,7 +21,8 @@ export default function ActionsTopcoderController() {
           const res = await createChallenge({
             name: title,
             detailedRequirements: bodyWithRef,
-            projectId
+            projectId,
+            prize: 0
           });
           window.open(`${WEBSITE}/challenges/${res.data.id}`, "_blank");
           await dataService.setValue(VSS.getWebContext().project.id + '_' + id, res.data.id, {scopeType: 'User'}); // eslint-disable-line no-undef
