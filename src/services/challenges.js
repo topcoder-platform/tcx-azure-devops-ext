@@ -29,7 +29,7 @@ export function createChallenge (challenge) {
     description: challenge.detailedRequirements,
     prizeSets: [{
       type: 'Challenge prizes',
-      prizes: {type: 'money', value: 0}
+      prizes: [{type: 'money', value: challenge.prize}]
     }],
     timelineTemplateId: DEFAULT_TIMELINE_TEMPLATE_ID,
     projectId: challenge.projectId,
