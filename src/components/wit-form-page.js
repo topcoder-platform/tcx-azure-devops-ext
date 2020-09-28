@@ -3,7 +3,6 @@ import { makeStyles } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import { createChallenge } from '../services/challenges'
-import { WEBSITE } from '../config' 
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -41,20 +40,23 @@ export default function WITFormPage() {
       const dataService = await VSS.getService(VSS.ServiceIds.ExtensionData); // eslint-disable-line no-undef
       const projectId = await dataService.getValue(VSS.getWebContext().project.id + '_TOPCODER_PROJECT', {scopeType: 'User'}); // eslint-disable-line no-undef
       if (projectId) {
-        var bodyWithRef = body + '\n\n### Reference ' + buildWorkItemUrl(id);
-        const res = await createChallenge({
-          name: title,
-          detailedRequirements: bodyWithRef,
-          projectId,
-          prize
-        });
-        window.open(`${WEBSITE}/challenges/${res.data.id}`, "_blank");
-        setSent(true);
-        setChallengeId(res.data.id);
-        await dataService.setValue(VSS.getWebContext().project.id + '_' + id, res.data.id, {scopeType: 'User'}); // eslint-disable-line no-undef
-        await dataService.setValue(VSS.getWebContext().project.id + '_' + id + '_PRIZE', prize.toString(), {scopeType: 'User'}); // eslint-disable-line no-undef
-        await dataService.setValue(VSS.getWebContext().project.id + '_' + id + '_TITLE', title, {scopeType: 'User'}); // eslint-disable-line no-undef
-        await dataService.setValue(VSS.getWebContext().project.id + '_' + id + '_DESC', body, {scopeType: 'User'}); // eslint-disable-line no-undef
+        try {
+          var bodyWithRef = body + '\n\n### Reference ' + buildWorkItemUrl(id);
+          const res = await createChallenge({
+            name: title,
+            detailedRequirements: bodyWithRef,
+            projectId,
+            prize
+          });
+          setSent(true);
+          setChallengeId(res.data.id);
+          await dataService.setValue(VSS.getWebContext().project.id + '_' + id, res.data.id, {scopeType: 'User'}); // eslint-disable-line no-undef
+          await dataService.setValue(VSS.getWebContext().project.id + '_' + id + '_PRIZE', prize.toString(), {scopeType: 'User'}); // eslint-disable-line no-undef
+          await dataService.setValue(VSS.getWebContext().project.id + '_' + id + '_TITLE', title, {scopeType: 'User'}); // eslint-disable-line no-undef
+          await dataService.setValue(VSS.getWebContext().project.id + '_' + id + '_DESC', body, {scopeType: 'User'}); // eslint-disable-line no-undef            
+        } catch (error) {
+          alert('Error sending work item to Topcoder. ' + error.response.status + ' ' + error.response.data);
+        }
         isProcessed = true;
       }
       if (!isProcessed) {
@@ -161,7 +163,7 @@ export default function WITFormPage() {
       </div>
 
       <div>
-        <TextField id="filled-basic" label="Topcoder Challenge Id" variant="filled" value={challengeId} className={classes.text} onChange={
+        <TextField id="filled-basic" disabled label="Topcoder Challenge Id" variant="filled" value={challengeId} className={classes.text} onChange={
             e => {
               setTitle(e.target.value)
             }
