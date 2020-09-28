@@ -108,7 +108,7 @@ export default function WITFormGroup() {
   return (
     <div className={classes.root}>
       <div className={classes.wrapper}>
-        <TextField id="filled-basic" label="Challenge Id" variant="filled" value={challengeId} onChange={
+        <TextField id="filled-basic" disabled label="Challenge Id" variant="filled" value={challengeId} onChange={
           e => {
             setChallengeId(e.target.value)
           }
