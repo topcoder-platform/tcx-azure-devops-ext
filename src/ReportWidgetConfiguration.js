@@ -98,7 +98,7 @@ function Widget() {
           },
           onSave: function() {
             var customSettings = {
-              data : JSON.stringify({ projectId: '1234' })
+              data : JSON.stringify({})
             };
             return WidgetHelpers.WidgetConfigurationSave.Valid(customSettings);
           }
