@@ -23,13 +23,30 @@ function Widget() {
                 var getQueryInfo = function (widgetSettings) {
                     if (widgetSettings.customSettings.data) {
                       var settings = JSON.parse(widgetSettings.customSettings.data);
-                      if (settings) {
-                        setProjectId(settings.projectId)
-                        getReport(settings.projectId).then(url => {
-                          setUrl(url)
-                        }).catch(e => {
-                          console.error(e);                          
-                        })
+                      if (settings && settings.projectId) {
+                        VSS.getService(VSS.ServiceIds.ExtensionData).then(dataService => {  // eslint-disable-line no-undef
+                          dataService.setValue(VSS.getWebContext().project.id + '_WIDGET_REPORT_PROJECT_ID', settings.projectId, {scopeType: 'User'}); // eslint-disable-line no-undef
+                          setProjectId(settings.projectId)
+                          getReport(settings.projectId).then(url => {
+                            setUrl(url)
+                          }).catch(e => {
+                            console.error(e);                          
+                          })
+                        });
+                      }
+                      else {
+                        VSS.getService(VSS.ServiceIds.ExtensionData).then(dataService => {  // eslint-disable-line no-undef
+                          dataService.getValue(VSS.getWebContext().project.id + '_WIDGET_REPORT_PROJECT_ID', {scopeType: 'User'}).then(projectId => {  // eslint-disable-line no-undef
+                            if (projectId) {
+                              setProjectId(projectId)
+                              getReport(projectId).then(url => {
+                                setUrl(url)
+                              }).catch(e => {
+                                console.error(e);                          
+                              })  
+                            }
+                          });
+                        });
                       }
                     }
                     return WidgetHelpers.WidgetStatusHelper.Success();
