@@ -1,106 +1,124 @@
 import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { green } from '@material-ui/core/colors';
-import TextField from '@material-ui/core/TextField';
+import { grey } from '@material-ui/core/colors';
+import Box from '@material-ui/core/Box';
+import Link from '@material-ui/core/Link';
+import get from 'lodash/get';
+
+import { getChallenge } from '../services/challenges';
+import {
+  challengeUrl,
+  onlineReviewUrl,
+  challengeDirectUrl
+} from '../utils/url-utils';
 
 const useStyles = makeStyles((theme) => ({
   root: {
     display: 'flex',
     alignItems: 'center',
+    textAlign: 'left'
   },
   wrapper: {
     margin: theme.spacing(1),
     position: 'relative',
+    width: '100%'
   },
-  buttonSuccess: {
-    backgroundColor: green[500],
-    '&:hover': {
-      backgroundColor: green[700],
-    },
+  label: {
+    color: grey[800],
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    wordWrap: 'normal'
   },
-  fabProgress: {
-    color: green[500],
-    position: 'absolute',
-    top: -6,
-    left: -6,
-    zIndex: 1,
+  value: {
+    color: 'black',
+    lineHeight: '22px',
+    fontSize: '14px',
+    fontWeight: '500',
+    verticalAlign: 'middle',
+    width: '100%'
   },
-  buttonProgress: {
-    color: green[500],
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    marginTop: -12,
-    marginLeft: -12,
+  valueLink: {
+    color: 'black !important',
+    textDecoration: 'underline !important',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    wordWrap: 'normal',
+    width: 'available',
+    display: 'inline-block',
+    overflow: 'hidden'
   }
 }));
 
 export default function WITFormGroup() {
   const classes = useStyles();
-  const [challengeId, setChallengeId] = React.useState("");
+  const [challengeId, setChallengeId] = React.useState("-");
+  const [legacyChallengeId, setLegacyChallengeId] = React.useState("-");
+  const [topcoderDirectLink, setTopcoderDirectLink] = React.useState('');
+  const [topcoderChallengeLink, setTopcoderChallengeLink] = React.useState('');
+  const [onlineReviewLink, setOnlineReviewLink] = React.useState('');
   const [id, setId] = React.useState(0);
 
+  /**
+   * This effect runs when the value of the "id" variable changes (on initial page load)
+   * This sets the values for the various label fields and links.
+   */
   React.useEffect(() => {
-
-    if (id && challengeId) {
-      (async function run() {
-        const dataService = await VSS.getService(VSS.ServiceIds.ExtensionData); // eslint-disable-line no-undef
-        await dataService.setValue(VSS.getWebContext().project.id + '_' + id, challengeId, {scopeType: 'User'}); // eslint-disable-line no-undef
-      })();
-    }
-
-    VSS.require(["TFS/WorkItemTracking/Services"], function (_WorkItemServices) { // eslint-disable-line no-undef
-      // Register a listener for the work item group contribution.
-      function getWorkItemFormService() {
-          return _WorkItemServices.WorkItemFormService.getService();
+    async function initFields () {
+      if (!id) {
+        return;
       }
-  
-      getWorkItemFormService().then(function(service) {            
-        // Get the current values for a few of the common fields
-        service.getFieldValues(["System.Id", "System.Title", "System.State", "System.CreatedDate"]).then(
-            function (value) {
-              console.log(value);  
-            });
-      });
+      // Get Extension Data service
+      const dataService = await VSS.getService(VSS.ServiceIds.ExtensionData);
+      // Project ID is used as prefix in all field keys, store it as constant
+      const ctxProjectId = VSS.getWebContext().project.id;
+      // Get values for challenge ID and legacy ID fields.
+      const dataKeys = {
+        challengeIdKey: `${ctxProjectId}_${id}`,
+        legacyChallengeIdKey: `${ctxProjectId}_${id}_LEGACY_ID`
+      };
+      let res = await dataService.getValues([dataKeys.challengeIdKey, dataKeys.legacyChallengeIdKey], {scopeType: 'User'});
+      const cId = res[dataKeys.challengeIdKey];
+      let legacyId = res[dataKeys.legacyChallengeIdKey];
+      // Fetch legacy ID from TC API if it doesn't exist, and store it in Extension Data
+      if (cId && cId !== '-' && !legacyId) {
+        res = await getChallenge(cId);
+        legacyId = get(res, 'data.legacyId');
+        if (legacyId) {
+          await dataService.setValue(`${`${ctxProjectId}_${id}`}_LEGACY_ID`, legacyId, {scopeType: 'User'});
+        }
+      }
+      // Set Legacy ID label and Legacy ID-related links
+      if (legacyId) {
+        setLegacyChallengeId(legacyId);
+        setTopcoderDirectLink(challengeDirectUrl(legacyId));
+        setOnlineReviewLink(onlineReviewUrl(legacyId));
+      }
+      // Set Challenge ID label and Challenge ID-related links
+      if (cId) {
+        setTopcoderChallengeLink(challengeUrl(cId));
+        setChallengeId(cId);
+      }
+      VSS.notifyLoadSucceeded();
+    }
+    initFields();
+  }, [id]);
 
-      VSS.register("tcx-wit-form-group", function () { // eslint-disable-line no-undef
+  React.useEffect(() => {
+    VSS.require(["TFS/WorkItemTracking/Services"], function (_WorkItemServices) {
+      VSS.register("tcx-wit-form-group", function () {
         return {
-          onFieldChanged: function(args) {
-            console.log('onFieldChanged');
-            console.log(args);
-          },
+          onFieldChanged: () => {},
           onLoaded: function (args) {
             if (args.id) {
               setId(args.id);
-              (async function run() {
-                const dataService = await VSS.getService(VSS.ServiceIds.ExtensionData); // eslint-disable-line no-undef
-                const cId = await dataService.getValue(VSS.getWebContext().project.id + '_' + args.id, {scopeType: 'User'}); // eslint-disable-line no-undef
-                setChallengeId(cId);
-              })();
             }
-            console.log('onloaded');
-            console.log(args);
           },
-          onUnloaded: function (args) {
-            console.log('onUnloaded');
-            console.log(args);
-          },
-          onSaved: function (args) {
-            console.log('onSaved');
-            console.log(args);
-            setId(args.id)
-          },
-          onReset: function (args) {
-            console.log('onReset');
-            console.log(args);
-          },
-          onRefreshed: function (args) {
-            console.log('onRefreshed');
-            console.log(args);
-          }
-        }
+          onUnloaded: () => {},
+          onSaved: (args) => setId(args.id),
+          onReset: () => {},
+          onRefreshed: () => {}
+        };
       });
-      VSS.notifyLoadSucceeded(); // eslint-disable-line no-undef
     });
 
   }, [challengeId, id]);
@@ -108,11 +126,32 @@ export default function WITFormGroup() {
   return (
     <div className={classes.root}>
       <div className={classes.wrapper}>
-        <TextField id="filled-basic" disabled label="Challenge Id" variant="filled" value={challengeId} onChange={
-          e => {
-            setChallengeId(e.target.value)
-          }
-        }/>
+        {/* Challenge ID */}
+        <Box pb={0.5}>
+          <Box className={classes.label}>Challenge ID</Box>
+          <Box mt={0.5} className={classes.value}>{challengeId}</Box>
+        </Box>
+        {/* Legacy ID */}
+        <Box py={0.5}>
+          <Box className={classes.label}>Legacy ID</Box>
+          <Box mt={0.5} className={classes.value}>
+            {legacyChallengeId}
+          </Box>
+        </Box>
+        {/* External Links */}
+        <Box py={0.5}>
+          <Box className={classes.label}>External Links</Box>
+          {!(topcoderChallengeLink || topcoderDirectLink || onlineReviewLink) && <Box mt={0.5} className={classes.value}>-</Box>}
+          {(topcoderChallengeLink && <Box mt={0.5} className={classes.value}>
+            <Link target="_blank" rel="noreferrer" className={classes.valueLink} href={topcoderChallengeLink}>Topcoder Challenge</Link>
+          </Box>)}
+          {(topcoderDirectLink && <Box mt={0.5} className={classes.value}>
+            <Link target="_blank" rel="noreferrer" className={classes.valueLink} href={topcoderDirectLink}>Topcoder Direct</Link>
+          </Box>)}
+          {(onlineReviewLink && <Box mt={0.5} className={classes.value}>
+            <Link target="_blank" rel="noreferrer" className={classes.valueLink} href={onlineReviewLink}>Online Review</Link>
+          </Box>)}
+        </Box>
       </div>
     </div>
   );

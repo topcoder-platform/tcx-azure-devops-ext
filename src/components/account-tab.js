@@ -7,9 +7,9 @@ import Button from '@material-ui/core/Button';
 import Fab from '@material-ui/core/Fab';
 import CheckIcon from '@material-ui/icons/Check';
 import AccountIcon from '@material-ui/icons/Person';
-import poll from '../utils/token-poll'
-import { getDeviceAuthentication } from '../services/account'
-import { fetchMemberProjects } from '../services/projects'
+import poll from '../utils/token-poll';
+import { getDeviceAuthentication } from '../services/account';
+import { fetchMemberProjects } from '../services/projects';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import FormHelperText from '@material-ui/core/FormHelperText';
@@ -96,41 +96,41 @@ export default function AccountTab() {
   });
 
   const getProjects = () => {
-    const filters = {}
-    filters['sort'] = 'lastActivityAt desc'
-    filters['memberOnly'] = false
+    const filters = {};
+    filters['sort'] = 'lastActivityAt desc';
+    filters['memberOnly'] = false;
 
     fetchMemberProjects(filters)
       .then(projects => {
         console.log(projects);
-        setProjects(projects)
-        VSS.getService(VSS.ServiceIds.ExtensionData).then((dataService) => { // eslint-disable-line no-undef
-          dataService.getValue(VSS.getWebContext().project.id + '_TOPCODER_PROJECT', {scopeType: 'User'}).then(topcoderProjectId => { // eslint-disable-line no-undef
-            setProjectId(topcoderProjectId)
+        setProjects(projects);
+        VSS.getService(VSS.ServiceIds.ExtensionData).then((dataService) => {
+          dataService.getValue(VSS.getWebContext().project.id + '_TOPCODER_PROJECT', {scopeType: 'User'}).then(topcoderProjectId => {
+            setProjectId(topcoderProjectId);
           });
         });
       })
       .catch((e) => {
-        console.error(e)
-        alert('Failed to fetch projects. ' + e.message)
-    })
+        console.error(e);
+        alert('Failed to fetch projects. ' + e.message);
+    });
   };
 
   const handleProjectIdChange = (event) => {
     setProjectId(event.target.value);
-    VSS.getService(VSS.ServiceIds.ExtensionData).then(dataService => { // eslint-disable-line no-undef
-      dataService.setValue(VSS.getWebContext().project.id + '_TOPCODER_PROJECT', event.target.value, {scopeType: 'User'}); // eslint-disable-line no-undef
+    VSS.getService(VSS.ServiceIds.ExtensionData).then(dataService => {
+      dataService.setValue(VSS.getWebContext().project.id + '_TOPCODER_PROJECT', event.target.value, {scopeType: 'User'});
     });
   };
 
   React.useEffect(() => {
     // Get data service
-    VSS.getService(VSS.ServiceIds.ExtensionData).then(function(dataService) { // eslint-disable-line no-undef
+    VSS.getService(VSS.ServiceIds.ExtensionData).then(function(dataService) {
       // Get value in user scope
       dataService.getValue('access-token', {scopeType: 'User'}).then(function(value) {
         console.log('User scoped key value is ' + value);
         if (value) {
-          setLoggedIn(true)
+          setLoggedIn(true);
           getProjects();
         }
       });
@@ -142,13 +142,13 @@ export default function AccountTab() {
       setLoading(true);
       getDeviceAuthentication().then(response => {
         if (response.data) {
-          window.open(response.data.verification_uri_complete, "_blank")
+          window.open(response.data.verification_uri_complete, "_blank");
           poll(response.data.device_code).then((data) => {
             setLoggedIn(true);
             getProjects();
             setLoading(false);
             // Get data service
-            VSS.getService(VSS.ServiceIds.ExtensionData).then(function(dataService) { // eslint-disable-line no-undef
+            VSS.getService(VSS.ServiceIds.ExtensionData).then(function(dataService) {
               // Set value in user scope
               dataService.setValue('access-token', this.token, {scopeType: 'User'}).then(function(value) {
                 console.log('Set User scoped key value is ' + value);
@@ -158,15 +158,15 @@ export default function AccountTab() {
               });
             }.bind(data));
           }).catch(e => {
-            alert(e)
+            alert(e);
             setLoading(false);
-          })
+          });
         }
       }).catch(e => {
         setLoading(false);
-        console.error(e)
-        alert('Error: ' + e.message)
-      })
+        console.error(e);
+        alert('Error: ' + e.message);
+      });
     }
   };
 
@@ -178,6 +178,7 @@ export default function AccountTab() {
             aria-label="save"
             color="primary"
             className={buttonClassname}
+            disabled={loggedIn}
             onClick={handleButtonClick}
           >
             {loading || !loggedIn ? <AccountIcon /> : <CheckIcon />}
@@ -189,10 +190,10 @@ export default function AccountTab() {
             variant="contained"
             color="primary"
             className={buttonClassname}
-            disabled={loading}
+            disabled={loading || loggedIn}
             onClick={handleButtonClick}
           >
-            {loading? 'Waiting for authentication' : loggedIn? 'Refresh': 'Login'}
+            {loading ? 'Waiting for authentication' : loggedIn ? 'Logged In.': 'Login'}
           </Button>
         </div>
       </div>

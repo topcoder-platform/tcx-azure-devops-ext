@@ -17,7 +17,7 @@ function App() {
   function useQuery() {
     return new URLSearchParams(window.location.search);
   }
-  
+
   let query = useQuery();
   console.log(query);
   let context = query.get('context');

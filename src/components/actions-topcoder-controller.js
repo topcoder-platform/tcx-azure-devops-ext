@@ -1,21 +1,21 @@
 import React from 'react';
-import { createChallenge } from '../services/challenges'
-import { WEBSITE } from '../config' 
+import { createChallenge } from '../services/challenges';
+import { WEBSITE } from '../config';
 
 export default function ActionsTopcoderController() {
 
   const buildWorkItemUrl = (id) => {
-    return 'https://dev.azure.com/' + 
-      VSS.getWebContext().host.name + '/' +  // eslint-disable-line no-undef
-      VSS.getWebContext().project.name + '/_workitems/edit/' + id; // eslint-disable-line no-undef
+    return 'https://dev.azure.com/' +
+      VSS.getWebContext().host.name + '/' +
+      VSS.getWebContext().project.name + '/_workitems/edit/' + id;
   };
 
   React.useEffect(() => {
     const createTopcoderChallenge = (id, title, body, tags = null) => {
       (async function run() {
         let isProcessed = false;
-        const dataService = await VSS.getService(VSS.ServiceIds.ExtensionData); // eslint-disable-line no-undef
-        const projectId = await dataService.getValue(VSS.getWebContext().project.id + '_TOPCODER_PROJECT', {scopeType: 'User'}); // eslint-disable-line no-undef
+        const dataService = await VSS.getService(VSS.ServiceIds.ExtensionData);
+        const projectId = await dataService.getValue(VSS.getWebContext().project.id + '_TOPCODER_PROJECT', {scopeType: 'User'});
         if (projectId) {
           var bodyWithRef = body + '\n\n### Reference ' + buildWorkItemUrl(id);
           const res = await createChallenge({
@@ -25,16 +25,16 @@ export default function ActionsTopcoderController() {
             prize: 0
           });
           window.open(`${WEBSITE}/challenges/${res.data.id}`, "_blank");
-          await dataService.setValue(VSS.getWebContext().project.id + '_' + id, res.data.id, {scopeType: 'User'}); // eslint-disable-line no-undef
+          await dataService.setValue(VSS.getWebContext().project.id + '_' + id, res.data.id, {scopeType: 'User'});
           isProcessed = true;
         }
         if (!isProcessed) {
-          alert('No topcoder project configured. Please configure at Topcoder X Hub -> Account.')
+          alert('No topcoder project configured. Please configure at Topcoder X Hub -> Account.');
         }
       })();
-    };  
+    };
 
-    VSS.require(["TFS/WorkItemTracking/Services"], function (_WorkItemServices) { // eslint-disable-line no-undef
+    VSS.require(["TFS/WorkItemTracking/Services"], function (_WorkItemServices) {
       // Register a listener for the work item group contribution.
       function getWorkItemFormService() {
           return _WorkItemServices.WorkItemFormService.getService();
@@ -61,9 +61,9 @@ export default function ActionsTopcoderController() {
           }
         };
       }());
-  
-      VSS.register("tcx-workitem-send-topcoder", menuContributionHandler); // eslint-disable-line no-undef
-      VSS.notifyLoadSucceeded(); // eslint-disable-line no-undef
+
+      VSS.register("tcx-workitem-send-topcoder", menuContributionHandler);
+      VSS.notifyLoadSucceeded();
     });
   }, []);
 

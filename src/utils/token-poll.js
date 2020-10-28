@@ -1,5 +1,5 @@
-import { getDeviceToken } from '../services/account'
-import { POLL_TIMEOUT, POLL_INTERVAL } from '../config'
+import { getDeviceToken } from '../services/account';
+import { POLL_TIMEOUT, POLL_INTERVAL } from '../config';
 
 /**
  * Function to poll token. It will periodically get the token
@@ -12,16 +12,16 @@ export default function poll(deviceCode) {
     var timeout;
     const interval = setInterval(() => {
       getDeviceToken(deviceCode).then(res => {
-        clearInterval(interval)
-        if (timeout) clearTimeout(timeout)
-        resolve({token: res.data.access_token, refreshToken: res.data.refresh_token})
+        clearInterval(interval);
+        if (timeout) clearTimeout(timeout);
+        resolve({token: res.data.access_token, refreshToken: res.data.refresh_token});
       }).catch(e => {
-        console.log(e)
-      })
+        console.log(e);
+      });
     }, POLL_INTERVAL);
     timeout = setTimeout(() => {
-      clearInterval(interval)
-      reject(new Error('Poll token timeout.'))
+      clearInterval(interval);
+      reject(new Error('Poll token timeout.'));
     }, POLL_TIMEOUT);
   });
 }

@@ -33,6 +33,10 @@ The following config parameters are supported, they are defined in `src/config.j
 | AUTH0_AUDIENCE | REACT_APP_AUTH0_AUDIENCE | The Auth0 URL | `https://api.topcoder.com/` |
 | POLL_TIMEOUT | REACT_APP_POLL_TIMEOUT | How long we'll wait user to complete the login. In milisecond. | `5 * 60 * 1000 // 5 mins` |
 | POLL_INTERVAL | REACT_APP_POLL_INTERVAL | The poll interval in milisecond | `10 * 1000 // 10 seconds` |
+| NEW_CHALLENGE_TEMPLATE | REACT_APP_NEW_CHALLENGE_TEMPLATE | Default properties that will be sent when creating a new challenge | See src/config.js |
+| TYPE_ID_TASK | TYPE_ID_TASK | Value of typeId - used when creating a new challenge | `927abff4-7af9-4145-8ba1-577c16e64e2e` |
+| DEFAULT_TIMELINE_TEMPLATE_ID | REACT_APP_DEFAULT_TIMELINE_TEMPLATE_ID | Value of timelineTemplateId - used when creating a new challenge | `7ebf1c69-f62f-4d3a-bdfb-fe9ddb56861c` |
+| DEFAULT_TRACK_ID | REACT_APP_DEFAULT_TRACK_ID | Value of trackId - used when creating a new challenge | `9b6fc876-f4d9-4ccb-9dfd-419247628825` |
 
 ### Building extension package
 

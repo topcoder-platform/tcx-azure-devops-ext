@@ -11,8 +11,8 @@ import Typography from '@material-ui/core/Typography';
 import Box from '@material-ui/core/Box';
 import AccountTab from './account-tab';
 import ChallengeTab from './challenges-tab';
-import ProjectsTable from './projects-table'
-import SettingsTab from './settings-tab'
+import ProjectsTable from './projects-table';
+import SettingsTab from './settings-tab';
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -27,7 +27,7 @@ function TabPanel(props) {
     >
       {value === index && (
         <Box p={3}>
-          <Typography>{children}</Typography>
+          <Typography component="div">{children}</Typography>
         </Box>
       )}
     </div>

@@ -35,17 +35,17 @@ export default function SettingsTab() {
     });
     github.getUser().listRepos().then(res => {
       setRepos(res.data);
-      VSS.getService(VSS.ServiceIds.ExtensionData).then((dataService) => { // eslint-disable-line no-undef
-        dataService.getValue(VSS.getWebContext().project.id + '_GITHUB_REPO', {scopeType: 'User'}).then(githubRepo => { // eslint-disable-line no-undef
-          setRepo(githubRepo)
+      VSS.getService(VSS.ServiceIds.ExtensionData).then((dataService) => {
+        dataService.getValue(VSS.getWebContext().project.id + '_GITHUB_REPO', {scopeType: 'User'}).then(githubRepo => {
+          setRepo(githubRepo);
         });
       });
     });
   };
 
   React.useEffect(() => {
-    VSS.getService(VSS.ServiceIds.ExtensionData).then((dataService) => { // eslint-disable-line no-undef
-      dataService.getValue(VSS.getWebContext().project.id + '_GITHUB_TOKEN', {scopeType: 'User'}).then(githubToken => { // eslint-disable-line no-undef
+    VSS.getService(VSS.ServiceIds.ExtensionData).then((dataService) => {
+      dataService.getValue(VSS.getWebContext().project.id + '_GITHUB_TOKEN', {scopeType: 'User'}).then(githubToken => {
         setToken(githubToken);
         if (githubToken) {
           fetchRepos(githubToken);
@@ -55,15 +55,15 @@ export default function SettingsTab() {
   }, []);
 
   const handleSaveButtonClick = () => {
-    VSS.getService(VSS.ServiceIds.ExtensionData).then(dataService => { // eslint-disable-line no-undef
-      dataService.setValue(VSS.getWebContext().project.id + '_GITHUB_TOKEN', token, {scopeType: 'User'}); // eslint-disable-line no-undef
+    VSS.getService(VSS.ServiceIds.ExtensionData).then(dataService => {
+      dataService.setValue(VSS.getWebContext().project.id + '_GITHUB_TOKEN', token, {scopeType: 'User'});
     });
     fetchRepos(token);
   };
   const handleRepoSelected = (event) => {
     setRepo(event.target.value);
-    VSS.getService(VSS.ServiceIds.ExtensionData).then(dataService => { // eslint-disable-line no-undef
-      dataService.setValue(VSS.getWebContext().project.id + '_GITHUB_REPO', event.target.value, {scopeType: 'User'}); // eslint-disable-line no-undef
+    VSS.getService(VSS.ServiceIds.ExtensionData).then(dataService => {
+      dataService.setValue(VSS.getWebContext().project.id + '_GITHUB_REPO', event.target.value, {scopeType: 'User'});
     });
   };
 
@@ -72,7 +72,7 @@ export default function SettingsTab() {
       <div>
         <TextField id="filled-basic" label="Github Token" variant="filled" value={token} className={classes.text} onChange={
           e => {
-            setToken(e.target.value)
+            setToken(e.target.value);
           }
         }/>
       </div>
