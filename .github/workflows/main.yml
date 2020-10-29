@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - develop
+      - master
 
 jobs:
   lint:
@@ -29,13 +30,12 @@ jobs:
     steps:
       - name: Checking out master branch
         uses: actions/checkout@master
-        with:
-          ref: develop
       - name: Setting up nodejs version 10
         uses: actions/setup-node@v1
         with:
           node-version: '10.x'
-      - name: Publish to marketplace
+      - name: Publish to marketplace (Dev)
+        if: github.ref == 'refs/heads/develop'
         run: |
           npm i -g tfx-cli
           npm install
@@ -45,6 +45,22 @@ jobs:
           cd vss-extension/
           npm install
           echo '${{ secrets.PERSONAL_ACCESS_TOKEN }}' | tfx extension publish --publisher ${{ secrets.PUBLISHER }} --manifest-globs vss-extension.json --share-with ${{ secrets.SHARED_ACCOUNT }} --rev-version
+          cd ..
+          git config --global user.name 'Topcoder X'
+          git config --global user.email 'tcx@topcoder.com'
+          git commit -am "Increase version"
+          git push
+      - name: Publish to marketplace (Prod)
+        if: github.ref == 'refs/heads/master'
+        run: |
+          npm i -g tfx-cli
+          npm install
+          node scripts/build.js
+          rm -rf vss-extension/build
+          mv build/ vss-extension/
+          cd vss-extension/
+          npm install
+          echo '${{ secrets.PERSONAL_ACCESS_TOKEN_PROD }}' | tfx extension publish --publisher ${{ secrets.PUBLISHER }} --manifest-globs vss-extension.json --overrides-file vss-extension.prod-overrides.json --share-with ${{ secrets.SHARED_ACCOUNT }} --rev-version
           cd ..
           git config --global user.name 'Topcoder X'
           git config --global user.email 'tcx@topcoder.com'
