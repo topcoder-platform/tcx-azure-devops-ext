@@ -18,8 +18,8 @@ export const AUTH0_CLIENT_ID = process.env.REACT_APP_AUTH0_CLIENT_ID || `XDw5NTM
 export const AUTH0_SCOPE = process.env.REACT_APP_AUTH0_SCOPE || `openid profile offline_access refresh_token`;
 export const AUTH0_AUDIENCE = process.env.REACT_APP_AUTH0_AUDIENCE || `https://api.topcoder.com/`;
 
-export const POLL_TIMEOUT = process.env.REACT_APP_POLL_TIMEOUT ? parseInt(process.env.REACT_APP_POLL_TIMEOUT) : 5 * 60 * 1000; // 5 mins
-export const POLL_INTERVAL = process.env.REACT_APP_POLL_INTERVAL ? parseInt(process.env.REACT_APP_POLL_INTERVAL) : 10 * 1000; // 10 seconds
+export const POLL_TIMEOUT = process.env.REACT_APP_POLL_TIMEOUT ? parseInt(process.env.REACT_APP_POLL_TIMEOUT) : 5 * 60; // 5 mins
+export const POLL_INTERVAL = process.env.REACT_APP_POLL_INTERVAL ? parseInt(process.env.REACT_APP_POLL_INTERVAL) : 10; // 10 seconds
 
 export const NEW_CHALLENGE_TEMPLATE = process.env.REACT_APP_NEW_CHALLENGE_TEMPLATE ? JSON.parse(process.env.REACT_APP_NEW_CHALLENGE_TEMPLATE) : {
   legacy: {
@@ -55,3 +55,28 @@ export const NEW_CHALLENGE_TEMPLATE = process.env.REACT_APP_NEW_CHALLENGE_TEMPLA
 export const TYPE_ID_TASK = process.env.TYPE_ID_TASK || '927abff4-7af9-4145-8ba1-577c16e64e2e';
 export const DEFAULT_TIMELINE_TEMPLATE_ID = process.env.REACT_APP_DEFAULT_TIMELINE_TEMPLATE_ID || '7ebf1c69-f62f-4d3a-bdfb-fe9ddb56861c';
 export const DEFAULT_TRACK_ID = process.env.REACT_APP_DEFAULT_TRACK_ID || '9b6fc876-f4d9-4ccb-9dfd-419247628825';
+
+export const GITHUB_CONFIG = {
+  // Authorization Initialization URL
+  AUTH_INIT_URL: 'https://cors-anywhere.herokuapp.com/https://github.com/login/device/code',
+  // Auth Token URL
+  AUTH_TOKEN_URL: 'https://cors-anywhere.herokuapp.com/https://github.com/login/oauth/access_token',
+  // Client ID
+  CLIENT_ID: process.env.GITHUB_CLIENT_ID || 'e90042d2763168c1bbba',
+  // Scope
+  SCOPE: process.env.GITHUB_SCOPE || 'repo workflow',
+  // Default Poll Timeout = 5 minutes
+  POLL_TIMEOUT: process.env.GITHUB_POLL_TIMEOUT ? parseInt(process.env.GITHUB_POLL_TIMEOUT) : 5 * 60 * 1000,
+  // Default Poll Interval = 10 seconds
+  POLL_INTERVAL: process.env.GITHUB_POLL_INTERVAL ? parseInt(process.env.GITHUB_POLL_INTERVAL) : 10 * 1000,
+  // Manifest Template
+  MANIFEST_TEMPLATE: require('./static/branch_synchronization-github_actions-template.yml').default,
+  // Actions manifest file path
+  MANIFEST_PATH: '.github/workflows/tcx-azure-deploy-<%= repoName %>-<%= repoBranch %>.yml',
+  // Name of Repo Secret
+  SECRET_NAME: 'TCX_AZURE_PAT',
+  // Name of author of commit
+  COMMIT_AUTHOR_NAME: 'Topcoder X',
+  // Email of the author of commit
+  COMMIT_AUTHOR_EMAIL: 'x@topcoder.com'
+};

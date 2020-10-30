@@ -13,7 +13,8 @@
         }
     ],
     "scopes": [
-        "vso.work"
+        "vso.work",
+        "vso.code_full"
     ],
     "contributions": [
         {
@@ -25,6 +26,17 @@
             "properties": {
                 "name": "Topcoder X",
                 "uri": "index.html?context=hub"
+            }
+        },
+        {
+            "id": "tcx-branch-sync-hub",
+            "type": "ms.vss-web.hub",
+            "targets": [
+                "ms.vss-work-web.work-hub-group"
+            ],
+            "properties": {
+                "name": "Branch Synchronization",
+                "uri": "index.html?context=branch-sync"
             }
         },
         {

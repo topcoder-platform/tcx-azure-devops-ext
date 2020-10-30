@@ -1,16 +1,14 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import TurndownService from 'turndown';
 import sortBy from 'lodash/sortBy';
 import get from 'lodash/get';
 import find from 'lodash/find';
+import findIndex from 'lodash/findIndex';
 
-import Button from '@material-ui/core/Button';
-import Box from '@material-ui/core/Box';
-import TextField from '@material-ui/core/TextField';
-import InputLabel from '@material-ui/core/InputLabel';
-import FormControl from '@material-ui/core/FormControl';
-import Select from '@material-ui/core/Select';
-import MenuItem from '@material-ui/core/MenuItem';
+import { TextField, TextFieldWidth } from "azure-devops-ui/TextField";
+import { Dropdown } from "azure-devops-ui/Dropdown";
+import { DropdownSelection } from "azure-devops-ui/Utilities/DropdownSelection";
+import { Button } from "azure-devops-ui/Button";
 import { makeStyles } from '@material-ui/core/styles';
 
 import { createChallenge } from '../services/challenges';
@@ -19,6 +17,9 @@ import { fetchMemberProjects } from '../services/projects';
 // Turndown Service (Used to convert HTML into MarkDown)
 const turndownService = new TurndownService();
 
+
+const selection = new DropdownSelection();
+
 // Styles
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -26,20 +27,26 @@ const useStyles = makeStyles((theme) => ({
     width: 400
   },
   formControl: {
-    margin: theme.spacing(1),
+    margin: theme.spacing(1.5),
     width: '100%'
   },
-  text: {
-    margin: theme.spacing(1),
-    width: 400
+  sendButton: {
+    marginTop: theme.spacing(0.5),
+    marginBottom: theme.spacing(0.5),
+    margin: theme.spacing(1.5)
+  },
+  dropdownLabel: {
+    display: 'block',
+    marginBottom: '8px'
   }
 }));
 
 export default function WITFormPage() {
   const classes = useStyles();
+
   const [id, setId] = React.useState();
   const [witId, setWitId] = React.useState('');
-  const [challengeId, setChallengeId] = React.useState('');
+  const [challengeId, setChallengeId] = React.useState('-');
   const [projectId, setProjectId] = React.useState(-1);
   const [title, setTitle] = React.useState('');
   const [description, setDescription] = React.useState('');
@@ -82,8 +89,8 @@ export default function WITFormPage() {
       const res = await createChallenge({
         name: title,
         detailedRequirements: bodyWithRef,
-        projectId,
-        directProjectId: get(find(projects, { id: projectId }), 'directProjectId'),
+        projectId: Number(projectId),
+        directProjectId: get(find(projects, { id: Number(projectId) }), 'directProjectId'),
         prize,
         privateDescription
       });
@@ -163,16 +170,21 @@ export default function WITFormPage() {
         };
         const projects = await fetchMemberProjects(filters);
         // Sort the projects and set their value
-        setProjects(sortBy(projects, ['name']));
+        setProjects(sortBy(projects, ['name']).map(o => ({ id: `${o.id}`, text: o.name })));
       } catch (e) {
         console.error(e);
         alert('Failed to fetch projects. ' + e.message);
       }
     }
-
-    getProjects();
+      getProjects();
   }, []);
 
+  useEffect(() => {
+    const idx = findIndex(projects, { id: `${projectId}` });
+    if (idx >= 0) {
+      selection.select(idx);
+    }
+  }, [projectId, projects]);
 
   /**
    * This effect is run on the page's initial render.
@@ -250,99 +262,78 @@ export default function WITFormPage() {
   return (
     <div className={classes.root}>
       {/* Work Item ID text field */}
-      <div>
-        <TextField
-          id="filled-basic"
-          disabled
-          label="Work Item Id"
-          variant="filled"
-          value={witId}
-          className={classes.text}
-          onChange={event => setWitId(event.target.value)}
-        />
-      </div>
+      <TextField
+        disabled
+        label="Work Item Id"
+        className={classes.formControl}
+        value={witId}
+        width={TextFieldWidth.auto}
+        onChange={event => setWitId(event.target.value)}
+      />
       {/* Challenge ID text field */}
-      <div>
-        <TextField
-          id="filled-basic"
-          disabled
-          label="Topcoder Challenge Id"
-          variant="filled"
-          value={challengeId}
-          className={classes.text}
-          onChange={event => setTitle(event.target.value)}
-          InputProps={{ readOnly: true }}
-        />
-      </div>
+      <TextField
+        disabled
+        readOnly
+        label="Topcoder Challenge Id"
+        className={classes.formControl}
+        value={challengeId}
+        width={TextFieldWidth.auto}
+      />
       {/* Project selector */}
-      <div>
-        <FormControl variant="filled" disabled={sent} className={classes.formControl}>
-          <InputLabel>Select Project</InputLabel>
-          <Select value={projectId} onChange={event => setProjectId(event.target.value)}>
-            {projects.map((row) => (
-              <MenuItem key={row.id} value={row.id}>{row.name}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+      <div className={classes.formControl}>
+        <label className={classes.dropdownLabel}>Select Project</label>
+        <Dropdown
+          placeholder="Select Project"
+          items={projects}
+          disabled={sent}
+          selection={selection}
+          onSelect={event => setProjectId(event.target.value)}
+        />
       </div>
       {/* Title text Field */}
-      <div>
-        <TextField
-          id="filled-basic"
-          label="Title"
-          variant="filled"
-          value={title}
-          className={classes.text}
-          onChange={event => setTitle(event.target.value)}
-          InputProps={{ readOnly: sent }}
-        />
-      </div>
+      <TextField
+        label="Title"
+        value={title}
+        className={classes.formControl}
+        onChange={event => setTitle(event.target.value)}
+        readOnly={sent}
+      />
       {/* Description text field */}
-      <div>
-        <TextField
-          id="filled-basic"
-          label="Description"
-          multiline
-          rows={6}
-          variant="filled"
-          value={description}
-          className={classes.text}
-          onChange={event => setDescription(event.target.value)}
-          InputProps={{ readOnly: sent }}
-        />
-      </div>
+      <TextField
+        label="Description"
+        multiline
+        rows={6}
+        value={description}
+        className={classes.formControl}
+        onChange={event => setDescription(event.target.value)}
+        readOnly={sent}
+      />
       {/* Private Specifications text field */}
-      <div>
-        <TextField
-          id="filled-basic"
-          label="Private Specification"
-          multiline
-          rows={6}
-          variant="filled"
-          value={privateDescription}
-          className={classes.text}
-          onChange={event => setPrivateDescription(event.target.value)}
-          InputProps={{ readOnly: sent }}
-        />
-      </div>
+      <TextField
+        label="Private Specification"
+        multiline
+        rows={6}
+        value={privateDescription}
+        className={classes.formControl}
+        onChange={event => setPrivateDescription(event.target.value)}
+        readOnly={sent}
+      />
       {/* Prize text field */}
-      <div>
-        <TextField
-          id="filled-basic"
-          label="Prize"
-          variant="filled"
-          value={prize}
-          className={classes.text}
-          onChange={event => setPrize(event.target.value)}
-          InputProps={{ readOnly: sent }}
-        />
-      </div>
+      <TextField
+        label="Prize"
+        value={prize}
+        className={classes.formControl}
+        onChange={event => setPrize(event.target.value)}
+        readOnly={sent}
+      />
       {/* Submit button */}
-      <Box mx={1} my={2}>
-        <Button variant="contained" color="primary" onClick={handleSendButtonClick} disabled={sent}>
-          {sent ? 'Sent to Topcoder' : 'Send to Topcoder'}
-        </Button>
-      </Box>
+      <Button
+        text={sent ? 'Sent to Topcoder' : 'Send to Topcoder'}
+        className={classes.sendButton}
+        primary={true}
+        onClick={handleSendButtonClick}
+        disabled={sent}
+      />
     </div>
   );
 }

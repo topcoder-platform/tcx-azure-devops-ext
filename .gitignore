@@ -161,3 +161,4 @@ sketch
 
 *.vsix
 vss-extension/build
+vss-extension/vss-extension.local-overrides.json
