@@ -1,20 +1,22 @@
 import React from 'react';
 import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
-import CircularProgress from '@material-ui/core/CircularProgress';
 import { green } from '@material-ui/core/colors';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import Button from '@material-ui/core/Button';
 import Fab from '@material-ui/core/Fab';
 import CheckIcon from '@material-ui/icons/Check';
 import AccountIcon from '@material-ui/icons/Person';
-import poll from '../utils/token-poll';
-import { getDeviceAuthentication } from '../services/account';
-import { fetchMemberProjects } from '../services/projects';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
+
+import { poll } from '../utils/token-poll';
+import { getDeviceAuthentication, getDeviceToken } from '../services/account';
+import { fetchMemberProjects } from '../services/projects';
+import { POLL_TIMEOUT, POLL_INTERVAL } from '../config';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -137,36 +139,40 @@ export default function AccountTab() {
     });
   }, []);
 
-  const handleButtonClick = () => {
+  const handleButtonClick = async () => {
     if (!loading) {
       setLoading(true);
-      getDeviceAuthentication().then(response => {
+      try {
+        const response = await getDeviceAuthentication();
         if (response.data) {
           window.open(response.data.verification_uri_complete, "_blank");
-          poll(response.data.device_code).then((data) => {
+          const pollingFn = getDeviceToken.bind(this, response.data.device_code);
+          try {
+            const res = await poll(pollingFn, POLL_INTERVAL, POLL_TIMEOUT);
+            debugger;
             setLoggedIn(true);
             getProjects();
             setLoading(false);
             // Get data service
-            VSS.getService(VSS.ServiceIds.ExtensionData).then(function(dataService) {
-              // Set value in user scope
-              dataService.setValue('access-token', this.token, {scopeType: 'User'}).then(function(value) {
-                console.log('Set User scoped key value is ' + value);
-              });
-              dataService.setValue('refresh-token', this.refreshToken, {scopeType: 'User'}).then(function(value) {
-                console.log('Set User scoped key value is ' + value);
-              });
-            }.bind(data));
-          }).catch(e => {
+            const dataService = await VSS.getService(VSS.ServiceIds.ExtensionData);
+            // Set value in user scope
+            const accessToken = res.data.access_token;
+            const refreshToken = res.data.refresh_token;
+            const tokenData = {
+              'access-token': accessToken,
+              'refresh-token': refreshToken
+            };
+            await dataService.setValues(tokenData, {scopeType: 'User'});
+          } catch (e) {
             alert(e);
             setLoading(false);
-          });
+          }
         }
-      }).catch(e => {
+      } catch (e) {
         setLoading(false);
         console.error(e);
         alert('Error: ' + e.message);
-      });
+      };
     }
   };
 
@@ -178,7 +184,7 @@ export default function AccountTab() {
             aria-label="save"
             color="primary"
             className={buttonClassname}
-            disabled={loggedIn}
+            // disabled={loggedIn}
             onClick={handleButtonClick}
           >
             {loading || !loggedIn ? <AccountIcon /> : <CheckIcon />}
@@ -190,7 +196,7 @@ export default function AccountTab() {
             variant="contained"
             color="primary"
             className={buttonClassname}
-            disabled={loading || loggedIn}
+            // disabled={loading || loggedIn}
             onClick={handleButtonClick}
           >
             {loading ? 'Waiting for authentication' : loggedIn ? 'Logged In.': 'Login'}

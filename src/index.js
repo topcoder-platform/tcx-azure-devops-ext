@@ -3,6 +3,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
+import "azure-devops-ui/Core/override.css";
 import App from './App';
 import * as serviceWorker from './serviceWorker';
 

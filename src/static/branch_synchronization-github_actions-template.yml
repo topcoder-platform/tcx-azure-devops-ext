@@ -1,0 +1,17 @@
+name: Branch Synchronization - TCX
+
+on:
+  push:
+    branches: [ <%= githubBranchName %> ]
+  
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Push to Azure DevOps
+        run: |
+          git remote add secondary https://${{ secrets.<%= secretName %> }}@<%= repoUrl %>
+          git push secondary HEAD:refs/heads/<%= azureBranchName %> --force --q
