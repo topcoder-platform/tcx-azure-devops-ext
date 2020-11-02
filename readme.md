@@ -23,16 +23,20 @@
 
 The following config parameters are supported, they are defined in `src/config.js` :
 
-| Name | Description | Default |
-| :------------------------------------- | :---------------------------------------- | :------------------------------ |
-| DOMAIN                                   | We can switch it with the topcoder environtment | `topcoder-dev.com`                              |
-| HOST_URL | The extension url. The address of the extension iframe. Change the publisher with your own | `https://{publisher}.gallerycdn.vsassets.io` |
-| AUTH0_URL | The Auth0 URL | `https://topcoder-dev.auth0.com/oauth` |
-| AUTH0_CLIENT_ID | The Auth0 client id |  |
-| AUTH0_SCOPE | The Auth0 scope | `openid profile offline_access` |
-| AUTH0_AUDIENCE | The Auth0 URL | `https://api.topcoder.com/` |
-| POLL_TIMEOUT | How long we'll wait user to complete the login | `5 * 60 * 1000 // 5 mins` |
-| POLL_INTERVAL | The poll interval | `10 * 1000 // 10 seconds` |
+| Name | Env Config Name | Description | Default |
+| :------------------------------------- | :---------------------------------------- | :------------------------------ | :------------------------------ |
+| DOMAIN | REACT_APP_DOMAIN                                  | We can switch it with the topcoder environtment | `topcoder-dev.com`                              |
+| HOST_URL | REACT_APP_HOST_URL | The extension url. The address of the extension iframe. Change the publisher with your own | `https://{publisher}.gallerycdn.vsassets.io` |
+| AUTH0_URL | REACT_APP_AUTH0_URL | The Auth0 URL | `https://topcoder-dev.auth0.com/oauth` |
+| AUTH0_CLIENT_ID | REACT_APP_AUTH0_CLIENT_ID | The Auth0 client id |  |
+| AUTH0_SCOPE | REACT_APP_AUTH0_SCOPE | The Auth0 scope | `openid profile offline_access` |
+| AUTH0_AUDIENCE | REACT_APP_AUTH0_AUDIENCE | The Auth0 URL | `https://api.topcoder.com/` |
+| POLL_TIMEOUT | REACT_APP_POLL_TIMEOUT | How long we'll wait user to complete the login. In milisecond. | `5 * 60 * 1000 // 5 mins` |
+| POLL_INTERVAL | REACT_APP_POLL_INTERVAL | The poll interval in milisecond | `10 * 1000 // 10 seconds` |
+| NEW_CHALLENGE_TEMPLATE | REACT_APP_NEW_CHALLENGE_TEMPLATE | Default properties that will be sent when creating a new challenge | See src/config.js |
+| TYPE_ID_TASK | TYPE_ID_TASK | Value of typeId - used when creating a new challenge | `927abff4-7af9-4145-8ba1-577c16e64e2e` |
+| DEFAULT_TIMELINE_TEMPLATE_ID | REACT_APP_DEFAULT_TIMELINE_TEMPLATE_ID | Value of timelineTemplateId - used when creating a new challenge | `7ebf1c69-f62f-4d3a-bdfb-fe9ddb56861c` |
+| DEFAULT_TRACK_ID | REACT_APP_DEFAULT_TRACK_ID | Value of trackId - used when creating a new challenge | `9b6fc876-f4d9-4ccb-9dfd-419247628825` |
 
 ### Building extension package
 
@@ -90,6 +94,15 @@ If we need to update the extension. We can follow these steps:
 - From the management portal, select your extension from the list, right-click, and choose Update.
 - Drag and drop your file or select click to find your VSIX file, then click Upload.
 
+## CI/CD Configuration
+
+Configure CI/CD on the Github `Secrets` settings
+
+| Name | Description |
+| :------------------------------------- | :---------------------------------------- |
+| PERSONAL_ACCESS_TOKEN | Personal access token generated from the profile setting https://docs.microsoft.com/en-us/azure/devops/extend/publish/command-line?view=azure-devops#acquire-a-pat |
+| PUBLISHER | Extension publisher |
+| SHARED_ACCOUNT | Share extension with |
 
 ## Verification
 

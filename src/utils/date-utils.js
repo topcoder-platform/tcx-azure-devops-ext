@@ -6,7 +6,7 @@
  */
 function formatDate(dateStr) {
   let date = new Date(dateStr);
-  return date.toLocaleDateString()
+  return date.toLocaleDateString();
 }
 
 export { formatDate };

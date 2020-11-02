@@ -14,9 +14,9 @@ import TablePagination from '@material-ui/core/TablePagination';
 import TableRow from '@material-ui/core/TableRow';
 import TableSortLabel from '@material-ui/core/TableSortLabel';
 import Paper from '@material-ui/core/Paper';
-import { fetchChallenges } from '../services/challenges'
-import { challengeUrl } from '../utils/url-utils'
-import { formatDate } from '../utils/date-utils'
+import { fetchChallenges } from '../services/challenges';
+import { challengeUrl } from '../utils/url-utils';
+import { formatDate } from '../utils/date-utils';
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -140,21 +140,23 @@ function ChallengeTable(props) {
     const filters = {
       sortBy: 'updated',
       sortOrder: 'desc'
-    }
-    filters['status'] = props.status
+    };
+    filters['status'] = props.status;
     fetchChallenges(filters, {
       page: 1,
       perPage: 50
     }).then((res) => {
       setData(res.data.map((row) => {
-        row.phases = row.currentPhaseNames.join(', ');
+        if (row.currentPhaseNames) {
+          row.phases = row.currentPhaseNames.join(', ');
+        }
         return row;
-      }))
+      }));
       console.log(JSON.stringify(res.data));
     }).catch((e) => {
-      console.error(e)
-      alert('Failed to fetch chellenges. ' + e.message)
-    })
+      console.error(e);
+      alert('Failed to fetch chellenges. ' + e.message);
+    });
   }, [props.status]);
 
   const handleRequestSort = (event, property) => {

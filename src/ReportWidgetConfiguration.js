@@ -6,7 +6,7 @@ import MenuItem from '@material-ui/core/MenuItem';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
-import { fetchMemberProjects } from './services/projects'
+import { fetchMemberProjects } from './services/projects';
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -62,49 +62,49 @@ function Widget() {
       data : JSON.stringify({ projectId: event.target.value })
     };
     console.log(widgetHelpers);
-    
+
     if (widgetHelpers) {
       var eventName = widgetHelpers.WidgetHelpers.WidgetEvent.ConfigurationChange;
       var eventArgs = widgetHelpers.WidgetHelpers.WidgetEvent.Args(customSettings);
-      widgetHelpers.widgetConfigurationContext.notify(eventName, eventArgs);  
+      widgetHelpers.widgetConfigurationContext.notify(eventName, eventArgs);
     }
   };
 
   React.useEffect(() => {
-    VSS.init({ // eslint-disable-line no-undef
+    VSS.init({
       explicitNotifyLoaded: true,
       usePlatformStyles: true
     });
-    VSS.require("TFS/Dashboards/WidgetHelpers", function (WidgetHelpers) { // eslint-disable-line no-undef
-      VSS.register("tcx-widget-report.configuration", function () { // eslint-disable-line no-undef
+    VSS.require("TFS/Dashboards/WidgetHelpers", function (WidgetHelpers) {
+      VSS.register("tcx-widget-report.configuration", function () {
         return {
           load: function (widgetSettings, widgetConfigurationContext) {
 
-            setWidgetHelpers({ WidgetHelpers, widgetSettings, widgetConfigurationContext })
-            const filters = {}
-            filters['sort'] = 'lastActivityAt desc'
-            filters['memberOnly'] = false
-        
+            setWidgetHelpers({ WidgetHelpers, widgetSettings, widgetConfigurationContext });
+            const filters = {};
+            filters['sort'] = 'lastActivityAt desc';
+            filters['memberOnly'] = false;
+
             fetchMemberProjects(filters)
               .then(projects => {
                 console.log(projects);
-                setData(projects)
+                setData(projects);
               })
               .catch((e) => {
-                console.error(e)
-                alert('Failed to fetch projects. ' + e.message)
-            })
+                console.error(e);
+                alert('Failed to fetch projects. ' + e.message);
+            });
             return WidgetHelpers.WidgetStatusHelper.Success();
           },
           onSave: function() {
             var customSettings = {
-              data : JSON.stringify({ projectId: '1234' })
+              data : JSON.stringify({})
             };
             return WidgetHelpers.WidgetConfigurationSave.Valid(customSettings);
           }
-        }
+        };
       });
-      VSS.notifyLoadSucceeded(); // eslint-disable-line no-undef
+      VSS.notifyLoadSucceeded();
     });
   }, []);
 
@@ -113,7 +113,7 @@ function Widget() {
       <FormControl className={classes.formControl}>
       <InputLabel id="demo-simple-select-helper-label">Select Project</InputLabel>
       <Select
-        MenuProps={{ className: classes.menu }}      
+        MenuProps={{ className: classes.menu }}
         labelId="demo-simple-select-helper-label"
         id="demo-simple-select-helper"
         value={projectId}

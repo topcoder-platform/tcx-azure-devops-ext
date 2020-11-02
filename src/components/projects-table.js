@@ -14,9 +14,9 @@ import TablePagination from '@material-ui/core/TablePagination';
 import TableRow from '@material-ui/core/TableRow';
 import TableSortLabel from '@material-ui/core/TableSortLabel';
 import Paper from '@material-ui/core/Paper';
-import { fetchMemberProjects } from '../services/projects'
-import { formatDate } from '../utils/date-utils'
-import { directUrl, connectUrl } from '../utils/url-utils'
+import { fetchMemberProjects } from '../services/projects';
+import { formatDate } from '../utils/date-utils';
+import { directUrl, connectUrl } from '../utils/url-utils';
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -136,20 +136,20 @@ function ProjectsTable() {
   const [data, setData] = React.useState([]);
 
   React.useEffect(() => {
-    const filters = {}
-    filters['sort'] = 'lastActivityAt desc'
-    filters['memberOnly'] = false
+    const filters = {};
+    filters['sort'] = 'lastActivityAt desc';
+    filters['memberOnly'] = false;
 
     fetchMemberProjects(filters)
       .then(projects => {
         console.log(projects);
-        
-        setData(projects)
+
+        setData(projects);
       })
       .catch((e) => {
-        console.error(e)
-        alert('Failed to fetch projects. ' + e.message)
-    })
+        console.error(e);
+        alert('Failed to fetch projects. ' + e.message);
+    });
   }, []);
 
   const handleRequestSort = (event, property) => {
