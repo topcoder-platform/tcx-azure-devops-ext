@@ -56,6 +56,7 @@ export const TYPE_ID_TASK = process.env.TYPE_ID_TASK || '927abff4-7af9-4145-8ba1
 export const DEFAULT_TIMELINE_TEMPLATE_ID = process.env.REACT_APP_DEFAULT_TIMELINE_TEMPLATE_ID || '7ebf1c69-f62f-4d3a-bdfb-fe9ddb56861c';
 export const DEFAULT_TRACK_ID = process.env.REACT_APP_DEFAULT_TRACK_ID || '9b6fc876-f4d9-4ccb-9dfd-419247628825';
 
+// Branch Sync config for Github
 export const GITHUB_CONFIG = {
   // Authorization Initialization URL
   AUTH_INIT_URL: 'https://cors-anywhere.herokuapp.com/https://github.com/login/device/code',
@@ -65,18 +66,26 @@ export const GITHUB_CONFIG = {
   CLIENT_ID: process.env.GITHUB_CLIENT_ID || 'e90042d2763168c1bbba',
   // Scope
   SCOPE: process.env.GITHUB_SCOPE || 'repo workflow',
-  // Default Poll Timeout = 5 minutes
-  POLL_TIMEOUT: process.env.GITHUB_POLL_TIMEOUT ? parseInt(process.env.GITHUB_POLL_TIMEOUT) : 5 * 60 * 1000,
-  // Default Poll Interval = 10 seconds
-  POLL_INTERVAL: process.env.GITHUB_POLL_INTERVAL ? parseInt(process.env.GITHUB_POLL_INTERVAL) : 10 * 1000,
   // Manifest Template
   MANIFEST_TEMPLATE: require('./static/branch_synchronization-github_actions-template.yml').default,
   // Actions manifest file path
   MANIFEST_PATH: '.github/workflows/tcx-azure-deploy-<%= repoName %>-<%= repoBranch %>.yml',
   // Name of Repo Secret
   SECRET_NAME: 'TCX_AZURE_PAT',
-  // Name of author of commit
-  COMMIT_AUTHOR_NAME: 'Topcoder X',
-  // Email of the author of commit
-  COMMIT_AUTHOR_EMAIL: 'x@topcoder.com'
+  // Commit Message
+  COMMIT_MESSAGE: 'Initialize TCX Branch Synchronization.'
+};
+
+// Branch Sync config for Azure
+export const AZURE_CONFIG = {
+  // Manifest Template
+  MANIFEST_TEMPLATE: require('./static/branch_synchronization-ado_pipeline-template.yml').default,
+  // Actions manifest file path
+  MANIFEST_PATH: '/.ado/github-deploy-<%= repoName %>-<%= repoBranch %>.yml',
+  // Commit Message
+  COMMIT_MESSAGE: 'Initialize TCX Branch Synchronization.',
+  // Name of Repo Secret
+  SECRET_NAME: 'TCX_GITHUB_TOKEN',
+  // Name of the pipeline
+  PIPELINE_NAME: 'Branch Synchronization - TCX'
 };

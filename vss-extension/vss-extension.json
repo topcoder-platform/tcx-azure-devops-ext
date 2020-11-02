@@ -2,7 +2,7 @@
     "manifestVersion": 1,
     "id": "topcoder-x",
     "publisher": "Topcoder",
-    "version": "1.0.63",
+    "version": "1.0.64",
     "name": "Topcoder X",
     "description": "Topcoder X is an application used by copilots to manage direct tasks.",
     "public": false,
@@ -14,7 +14,8 @@
     ],
     "scopes": [
         "vso.work",
-        "vso.code_full"
+        "vso.code_full",
+        "vso.build_execute"
     ],
     "contributions": [
         {

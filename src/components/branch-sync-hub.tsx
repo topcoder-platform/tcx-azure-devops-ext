@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import copy from 'clipboard-copy';
-import tweetsodium from 'tweetsodium';
-import { bytesToBase64 } from "byte-base64";
 import { makeStyles } from '@material-ui/core';
-import { Octokit } from '@octokit/rest';
 
 import get from 'lodash/get';
 import forEach from 'lodash/forEach';
@@ -30,17 +27,32 @@ import { Dropdown } from 'azure-devops-ui/Dropdown';
 import { Toggle } from 'azure-devops-ui/Toggle';
 import { DropdownSelection } from 'azure-devops-ui/Utilities/DropdownSelection';
 
-import { GitRepository } from 'TFS/VersionControl/Contracts';
-import GitRestClient from 'TFS/VersionControl/GitRestClient';
+import { IterableElement } from 'type-fest';
+import { GitBranchStats, GitRepository } from 'TFS/VersionControl/Contracts';
+import {
+  ReposGetResponseData,
+  ReposListBranchesResponseData
+} from '@octokit/types';
 
 import { poll } from '../utils/token-poll';
-import { GITHUB_CONFIG } from '../config';
+import { AZURE_CONFIG, GITHUB_CONFIG } from '../config';
 import {
   checkAuthorizationStatus,
+  getOctokitInstance,
   IGithubAuthInitResponse,
-  initiateAuthorizationFlow
+  initializeOctokitInstance,
+  initiateAuthorizationFlow,
+  createOrUpdateRepoSecret,
+  createOrUpdateGitHubFile,
+  waitForWorkflow
 } from '../services/github';
-import { isString } from 'lodash';
+import {
+  createBuildDefinition,
+  createOrUpdateAzureFile,
+  getAdoClients,
+  triggerBuild,
+  waitForBuild
+} from '../services/azure';
 
 const useStyles = makeStyles({
   root: {
@@ -128,6 +140,10 @@ const dialogStyles = makeStyles({
     marginTop: '16px',
     marginBottom: '16px'
   },
+  branchSynchronizationPanelContent: {
+    minHeight: '32px !important',
+    justifyContent: 'center'
+  },
   textParagraph: {
     marginTop: '4px',
     marginBottom: '4px'
@@ -158,18 +174,12 @@ const defaultState = {
   branchSynchronization: false,
   githubToken: '',
   githubRepository: null,
-  githubBranch: '',
+  githubBranch: null,
   azureRepository: null,
-  azureBranch: '',
+  azureBranch: null,
   azurePersonalAccessToken: '',
   twoWaySynchronization: false
 };
-
-// Github REST client
-let octokit = new Octokit();
-
-// Azure Git REST client
-let adoGitClient: GitRestClient.GitHttpClient4_1;
 
 // Dropdown Selection
 const githubRepoSelection = new DropdownSelection();
@@ -187,7 +197,9 @@ export default function BranchSyncHub() {
   // Is branch synchronization enabled?
   const [branchSynchronization, _setBranchSynchronization] = useState(defaultState.branchSynchronization);
   // Is Github Auth Dialog visible?
-  const [isGithubAuthDialogOpen, setIsGithubAuthDialogOpen] = useState(false);
+  const [githubAuthDialogOpen, setGithubAuthDialogOpen] = useState(false);
+  // Is Branch Synchronization setup in progress
+  const [branchSynchronizationSetupInProgress, setBranchSynchronizationSetupInProgress] = useState(false);
   // Alert Dialog State - Tracks whether it is open, it's text and it's title.
   const [alertDialogState, setAlertDialogState] = useState({
     open: false,
@@ -204,17 +216,17 @@ export default function BranchSyncHub() {
   // Stores the Github OAuth token.
   const [githubToken, setGithubToken] = useState<string>(defaultState.githubToken);
   // Github Repositories
-  const [githubRepositories, setGithubRepositories] = useState<any>([]);
-  const [githubRepository, setGithubRepository] = useState<any>(null);
+  const [githubRepositories, setGithubRepositories] = useState<ReposGetResponseData[]>([]);
+  const [githubRepository, setGithubRepository] = useState<ReposGetResponseData | null>(null);
   // Github Repository Branches
-  const [githubBranches, setGithubBranches] = useState<any>([]);
-  const [githubBranch, setGithubBranch] = useState<any>(null);
+  const [githubBranches, setGithubBranches] = useState<ReposListBranchesResponseData>([]);
+  const [githubBranch, setGithubBranch] = useState<IterableElement<ReposListBranchesResponseData> | null>(null);
   // Azure Repositories
   const [azureRepositories, setAzureRepositories] = useState<GitRepository[]>([]);
   const [azureRepository, setAzureRepository] = useState<GitRepository | null>(null);
   // Azure Repository Branches
-  const [azureBranches, setAzureBranches] = useState<any>([]);
-  const [azureBranch, setAzureBranch] = useState<any>(null);
+  const [azureBranches, setAzureBranches] = useState<GitBranchStats[] | null>([]);
+  const [azureBranch, setAzureBranch] = useState<GitBranchStats | null>(null);
   // Azure Personal Access Token
   const [azurePersonalAccessToken, setAzurePersonalAccessToken] = useState('');
   // 2-way synchronization
@@ -239,7 +251,7 @@ export default function BranchSyncHub() {
    * This effect retrieves the various state variables (githubToken, azureToken, etc.).
    */
   useEffect(() => {
-    async function initFields () {
+    async function initFields() {
       // Get Extension Data service.
       const dataService = await VSS.getService<IExtensionDataService>(VSS.ServiceIds.ExtensionData);
       // Project ID is used as prefix in all field keys, store it as constant.
@@ -336,17 +348,14 @@ export default function BranchSyncHub() {
    */
   useEffect(() => {
     async function handleGithubTokenUpdate() {
+      // Re-initialize Octokit
+      const octokit = initializeOctokitInstance(githubToken);
       if (githubToken) {
-        // Create a new Octokit instance when Github Token is set
-        octokit = new Octokit({ auth: githubToken });
         // Populate the Github Repositories Field
         let repos: any = await octokit.repos.listForAuthenticatedUser();
         repos = sortBy(repos.data, ['full_name']);
         repos = map(repos, o => ({ ...o, id: `${o.id}`, text: o.full_name }));
         setGithubRepositories(repos);
-
-      } else {
-        octokit = new Octokit();
       }
     }
     handleGithubTokenUpdate();
@@ -357,7 +366,7 @@ export default function BranchSyncHub() {
    */
   useEffect(() => {
     if (githubRepositories && githubRepositories.length > 0 && !isNil(githubRepository)) {
-      githubRepoSelection.select(findIndex(githubRepositories, {id: githubRepository.id}));
+      githubRepoSelection.select(findIndex(githubRepositories, { id: githubRepository.id }));
     }
   }, [githubRepositories, githubRepository]);
 
@@ -366,7 +375,7 @@ export default function BranchSyncHub() {
    */
   useEffect(() => {
     if (githubBranches && githubBranches.length > 0 && !isNil(githubBranch)) {
-      githubBranchSelection.select(findIndex(githubBranches, {id: githubBranch.id}));
+      githubBranchSelection.select(findIndex(githubBranches, { id: githubBranch.name } as any));
     }
   }, [githubBranches, githubBranch]);
 
@@ -375,7 +384,7 @@ export default function BranchSyncHub() {
    */
   useEffect(() => {
     if (azureRepositories && azureRepositories.length > 0 && !isNil(azureRepository)) {
-      azureRepoSelection.select(findIndex(azureRepositories, {id: azureRepository.id}));
+      azureRepoSelection.select(findIndex(azureRepositories, { id: azureRepository.id }));
     }
   }, [azureRepositories, azureRepository]);
 
@@ -384,7 +393,7 @@ export default function BranchSyncHub() {
    */
   useEffect(() => {
     if (azureBranches && azureBranches.length > 0 && !isNil(azureBranch)) {
-      azureBranchSelection.select(findIndex(azureBranches, {id: azureBranch.id}));
+      azureBranchSelection.select(findIndex(azureBranches, { name: azureBranch.name }));
     }
   }, [azureBranches, azureBranch]);
 
@@ -394,6 +403,8 @@ export default function BranchSyncHub() {
    */
   useEffect(() => {
     async function getBranchesForGithubRepository() {
+      // Get octokit instance
+      const octokit = getOctokitInstance();
       // Fetch the repo's name and owner.
       const owner = get(githubRepository, 'owner.login');
       const repo = get(githubRepository, 'name');
@@ -417,14 +428,9 @@ export default function BranchSyncHub() {
    */
   useEffect(() => {
     async function getTokens() {
-      VSS.require(
-        ['VSS/Service', 'TFS/VersionControl/GitRestClient'],
-        async (vssService: any, gitRestClient: any) => {
-          adoGitClient = vssService.getCollectionClient(gitRestClient.GitHttpClient4_1);
-          const repositories = await adoGitClient.getRepositories();
-          setAzureRepositories(map(repositories, o => ({ ...o, text: o.name })));
-        }
-      );
+      const { adoGitClient } = await getAdoClients();
+      const repositories = await adoGitClient.getRepositories();
+      setAzureRepositories(map(repositories, o => ({ ...o, text: o.name })));
     }
     getTokens();
   }, []);
@@ -441,10 +447,7 @@ export default function BranchSyncHub() {
       if (!repoId) {
         return;
       }
-      // Populate the Azure Branch selector.
-      while (isNil(adoGitClient)) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
+      const { adoGitClient } = await getAdoClients();
       const branchListRes = await adoGitClient.getBranches(repoId);
       let branches = sortBy(branchListRes, ['name']);
       branches = map(branches, o => ({ ...o, id: o.name, text: o.name }));
@@ -478,7 +481,7 @@ export default function BranchSyncHub() {
     try {
       // Initialize vars and UI
       setGithubAuthInitResponse(null);
-      setIsGithubAuthDialogOpen(true);
+      setGithubAuthDialogOpen(true);
       // Send the Auth Initialization request and store the response
       const authRes = await initiateAuthorizationFlow();
       setGithubAuthInitResponse(authRes);
@@ -495,13 +498,13 @@ export default function BranchSyncHub() {
       }
       // Store token and update UI
       setGithubToken(accessToken);
-      setIsGithubAuthDialogOpen(false);
+      setGithubAuthDialogOpen(false);
       showGithubAuthSuccessDialog();
     } catch (error) {
       // Authorization failed somewhere along the way. Handle error.
       console.error(error);
       setGithubAuthInitResponse(null);
-      setIsGithubAuthDialogOpen(false);
+      setGithubAuthDialogOpen(false);
       showGithubAuthFailureDialog();
     }
   }
@@ -596,7 +599,7 @@ export default function BranchSyncHub() {
   /**
    * Deselect the selected Github branch
    */
-  function deselectGithubBranch () {
+  function deselectGithubBranch() {
     setGithubBranch(null);
     githubBranchSelection.value = [];
   }
@@ -604,94 +607,29 @@ export default function BranchSyncHub() {
   /**
    * Deselect the selected Azure branch
    */
-  function deselectAzureBranch () {
+  function deselectAzureBranch() {
     setAzureBranch(null);
     azureBranchSelection.value = [];
   }
 
-  async function setBranchSynchronization (value: boolean) {
+  async function setBranchSynchronization(value: boolean) {
     // Do nothing if branch synchronization is being disabled
     if (!value) {
       _setBranchSynchronization(value);
       return;
     }
-    setupGithubWorkflow();
-  }
-
-  /**
-   * Setup Github Workflow which will push Github commits to ADO.
-   */
-  async function setupGithubWorkflow () {
     try {
-      // Fetch the repo's name and owner.
-      const owner = get(githubRepository, 'owner.login');
-      const repo = get(githubRepository, 'name');
-      // Get repo public key to create secret
-      const repoPublicKeyRes = await octokit.actions.getRepoPublicKey({ owner, repo });
-      const repoPublicKeyBase64 = get(repoPublicKeyRes, 'data.key');
-      if (!repoPublicKeyBase64 || !isString(repoPublicKeyBase64) || repoPublicKeyBase64.length < 10) {
-        throw new Error('Invalid Repo Public Key');
+      setBranchSynchronizationSetupInProgress(true);
+      await setupGithubWorkflow();
+      if (twoWaySynchronization) {
+        await setupAzureWorkflow();
       }
-      // Encrypt the PAT token using the public key
-      const repoPublicKeyRaw = atob(repoPublicKeyBase64);
-      const publicKey = Uint8Array.from(map(repoPublicKeyRaw, x => x.charCodeAt(0)));
-      const encoder = new TextEncoder();
-      const encodedAzurePATRaw = tweetsodium.seal(
-        encoder.encode(azurePersonalAccessToken),
-        publicKey
-      );
-      const encodedAzurePAT = bytesToBase64(encodedAzurePATRaw);
-      // Upsert the token as a secret
-      await octokit.actions.createOrUpdateRepoSecret({
-        owner,
-        repo,
-        secret_name: GITHUB_CONFIG.SECRET_NAME,
-        encrypted_value: encodedAzurePAT,
-        key_id: get(repoPublicKeyRes, 'data.key_id')
-      });
-      // Substitute values in templates to get manifest path and manifest template
-      const manifestPath = template(GITHUB_CONFIG.MANIFEST_PATH)({
-        repoName: kebabCase(azureRepository!.name),
-        repoBranch: kebabCase(azureBranch.name)
-      });
-      const templateSettings = { interpolate: /<%=([\s\S]+?)%>/g };
-      const manifestContentTemplate = template(GITHUB_CONFIG.MANIFEST_TEMPLATE, templateSettings);
-      const manifestContent = manifestContentTemplate({
-        secretName: GITHUB_CONFIG.SECRET_NAME,
-        repoUrl: get(azureRepository, 'webUrl').replace('https://', ''),
-        azureBranchName: azureBranch.name,
-        githubBranchName: githubBranch.name
-      });
-      let sha: string | undefined;
-      try {
-        // Get existing file SHA (needed to update it)
-        const fileInfoRes = await octokit.repos.getContent({
-          owner,
-          repo,
-          path: manifestPath,
-          ref: `refs/heads/${githubBranch.name}`
-        });
-        sha = get(fileInfoRes, 'data.sha');
-      } catch (_err) {}
-      // Commit the manifest
-      await octokit.repos.createOrUpdateFileContents({
-        content: btoa(manifestContent),
-        message: 'Initialize TCX Branch Synchronization.',
-        path: manifestPath,
-        owner,
-        repo,
-        branch: `refs/heads/${githubBranch.name}`,
-        sha
-      });
       // Update UI
       _setBranchSynchronization(true);
       setAlertDialogState({
         open: true,
         text: (
-          <p>
-            Github Branch Synchronization setup has completed successfully.
-            All of your commits to Github will be pushed to Azure DevOps automatically.
-          </p>
+          <p>Branch Synchronization setup has completed successfully.</p>
         ),
         title: 'Success!',
         callback: () => {},
@@ -707,14 +645,99 @@ export default function BranchSyncHub() {
         text: (
           <p>Uh oh! Error occurred while trying to setup branch synchronization. Please try again.</p>
         ),
-        title: 'Branch synchronization setup error.',
+        title: 'Error!',
         callback: () => {},
         confirmationDialog: false,
         danger: true,
         primaryButtonText: 'OK',
         secondaryButtonText: '',
       });
+    } finally {
+      setBranchSynchronizationSetupInProgress(false);
     }
+  }
+
+  /**
+   * Setup Azure Workflow which will push ADO commits to Github.
+   */
+  async function setupAzureWorkflow() {
+    // Substitute values in templates to get manifest path and manifest contents
+    const templateSettings = {
+      interpolate: /<%=([\s\S]+?)%>/g
+    };
+    const manifestPath = template(AZURE_CONFIG.MANIFEST_PATH, templateSettings)({
+      repoName: kebabCase(githubRepository!.name),
+      repoBranch: kebabCase(githubBranch!.name)
+    });
+    const manifestContents = template(AZURE_CONFIG.MANIFEST_TEMPLATE, templateSettings)({
+      secretName: AZURE_CONFIG.SECRET_NAME,
+      repoUrl: get(githubRepository!, 'clone_url').replace('https://', ''),
+      azureBranchName: azureBranch!.name,
+      githubBranchName: githubBranch!.name
+    });
+    // Upload the pipeline definition
+    await createOrUpdateAzureFile(
+      manifestPath,
+      manifestContents,
+      azureRepository!,
+      azureBranch!,
+      AZURE_CONFIG.COMMIT_MESSAGE
+    );
+    // Create the build pipeline
+    const pipeline = await createBuildDefinition(
+      manifestPath,
+      azureRepository!,
+      azureBranch!,
+      githubToken
+    );
+    // Trigger a build
+    const build = await triggerBuild(
+      pipeline.id,
+      azureRepository!,
+      azureBranch!
+    );
+    // Wait for the build to complete
+    await waitForBuild(build, 3, 180);
+  }
+
+  /**
+   * Setup Github Workflow which will push Github commits to ADO.
+   */
+  async function setupGithubWorkflow() {
+    // Store the PAT as a secret
+    await createOrUpdateRepoSecret(
+      githubRepository!,
+      GITHUB_CONFIG.SECRET_NAME,
+      azurePersonalAccessToken
+    );
+    // Substitute values in templates to get manifest path and manifest contents
+    const templateSettings = { interpolate: /<%=([\s\S]+?)%>/g };
+    const manifestPath = template(GITHUB_CONFIG.MANIFEST_PATH, templateSettings)({
+      repoName: kebabCase(azureRepository!.name),
+      repoBranch: kebabCase(azureBranch!.name)
+    });
+    const manifestContentTemplate = template(GITHUB_CONFIG.MANIFEST_TEMPLATE, templateSettings);
+    const manifestContent = manifestContentTemplate({
+      secretName: GITHUB_CONFIG.SECRET_NAME,
+      repoUrl: get(azureRepository, 'webUrl').replace('https://', ''),
+      azureBranchName: azureBranch!.name,
+      githubBranchName: githubBranch!.name
+    });
+    // Create or update the Workflow manifest
+    await createOrUpdateGitHubFile(
+      manifestPath,
+      manifestContent,
+      githubRepository!,
+      githubBranch!,
+      GITHUB_CONFIG.COMMIT_MESSAGE
+    );
+    // Wait for the Workflow to complete
+    await waitForWorkflow(
+      githubRepository!,
+      manifestPath,
+      3,
+      180
+    );
   }
 
   /**
@@ -754,11 +777,11 @@ export default function BranchSyncHub() {
               <div><label>Github Repo</label></div>
               <Dropdown
                 placeholder="Select Github Repo"
-                items={githubRepositories}
+                items={githubRepositories as any}
                 disabled={branchSynchronization}
                 selection={githubRepoSelection}
                 onSelect={(_, e) => {
-                  setGithubRepository(e);
+                  setGithubRepository(e as any);
                   deselectGithubBranch();
                 }}
               />
@@ -766,10 +789,10 @@ export default function BranchSyncHub() {
               <div><label>Github Branch</label></div>
               <Dropdown
                 placeholder="Select Github Branch"
-                items={githubBranches}
+                items={githubBranches as any}
                 disabled={!githubRepository || branchSynchronization}
                 selection={githubBranchSelection}
-                onSelect={(_, e) => setGithubBranch(e)}
+                onSelect={(_, e) => setGithubBranch(e as any)}
               />
               {/* Azure Repo */}
               <div><label>Azure Repo</label></div>
@@ -787,10 +810,10 @@ export default function BranchSyncHub() {
               <div><label>Azure Branch</label></div>
               <Dropdown
                 placeholder="Select Azure Branch"
-                items={azureBranches}
+                items={azureBranches! as any}
                 disabled={!azureRepository || branchSynchronization}
                 selection={azureBranchSelection}
-                onSelect={(_, e) => setAzureBranch(e)}
+                onSelect={(_, e) => setAzureBranch(e as any)}
               />
               {/* Azure PAT Token */}
               <div><label>Azure PAT Token</label></div>
@@ -859,8 +882,8 @@ export default function BranchSyncHub() {
     </ConditionalChildren>
 
     {/* Github Auth Dialog */}
-    <ConditionalChildren renderChildren={isGithubAuthDialogOpen}>
-      <CustomDialog onDismiss={() => setIsGithubAuthDialogOpen(false)} modal={true}>
+    <ConditionalChildren renderChildren={githubAuthDialogOpen}>
+      <CustomDialog onDismiss={() => setGithubAuthDialogOpen(false)} modal={true}>
         <CustomHeader className="bolt-header-with-commandbar" separator>
           <HeaderTitleArea>
             <div className="flex-grow scroll-hidden" style={{ marginRight: "16px" }}>
@@ -910,6 +933,27 @@ export default function BranchSyncHub() {
               />
             </div>
           </>}
+        </PanelContent>
+        <PanelFooter showSeparator className="body-m">
+          <Spinner size={SpinnerSize.medium} />
+        </PanelFooter>
+      </CustomDialog>
+    </ConditionalChildren>
+
+    {/* Branch Synchronization Setup In Progress  Dialog */}
+    <ConditionalChildren renderChildren={branchSynchronizationSetupInProgress}>
+      <CustomDialog onDismiss={() => {}} modal={true}>
+        <CustomHeader className="bolt-header-with-commandbar" separator>
+          <HeaderTitleArea>
+            <div className="flex-grow scroll-hidden" style={{ marginRight: "16px" }}>
+              <div className={"title-m " + dialogClasses.title}>Working...</div>
+            </div>
+          </HeaderTitleArea>
+        </CustomHeader>
+        <PanelContent className={dialogClasses.panelContentWithMargin + ' ' + dialogClasses.branchSynchronizationPanelContent}>
+          <div className={dialogClasses.textParagraph}>
+            Setting up branch synchronization. Please wait.
+          </div>
         </PanelContent>
         <PanelFooter showSeparator className="body-m">
           <Spinner size={SpinnerSize.medium} />
