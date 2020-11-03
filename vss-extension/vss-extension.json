@@ -14,7 +14,8 @@
     ],
     "scopes": [
         "vso.work",
-        "vso.code_full"
+        "vso.code_full",
+        "vso.build_execute"
     ],
     "contributions": [
         {

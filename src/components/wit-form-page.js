@@ -120,7 +120,7 @@ export default function WITFormPage() {
    * The "Select Project" field is not handled here.
    */
   React.useEffect(() => {
-    async function initFields () {
+    async function initFields() {
       if (!id) {
         return;
       }
