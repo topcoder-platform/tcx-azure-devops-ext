@@ -15,7 +15,7 @@ import {
  * @param filters
  * @param params
  */
-export function fetchChallenges (filters, params) {
+export function fetchChallenges(filters, params) {
   const query = {
     ...filters,
     ...params
@@ -23,7 +23,7 @@ export function fetchChallenges (filters, params) {
   return axiosInstance.get(`${CHALLENGE_API_URL}?${qs.stringify(query, { encode: false })}`);
 }
 
-export function createChallenge (challenge) {
+export function createChallenge(challenge) {
   const body = assign({}, NEW_CHALLENGE_TEMPLATE, {
     typeId: TYPE_ID_TASK,
     name: challenge.name,
@@ -46,6 +46,6 @@ export function createChallenge (challenge) {
   return axiosInstance.post(`${CHALLENGE_API_URL}`, body);
 }
 
-export function getChallenge (challengeId) {
+export function getChallenge(challengeId) {
   return axiosInstance.get(`${CHALLENGE_API_URL}/${challengeId}`);
 }

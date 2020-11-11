@@ -63,7 +63,7 @@ export default function WITFormGroup() {
    * This sets the values for the various label fields and links.
    */
   React.useEffect(() => {
-    async function initFields () {
+    async function initFields() {
       if (!id) {
         return;
       }
