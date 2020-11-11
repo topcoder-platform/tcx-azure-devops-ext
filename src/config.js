@@ -62,7 +62,7 @@ export const GITHUB_CONFIG = {
   // Auth Token URL
   AUTH_TOKEN_URL: 'https://cors-anywhere.herokuapp.com/https://github.com/login/oauth/access_token',
   // Client ID
-  CLIENT_ID: process.env.GITHUB_CLIENT_ID || 'e90042d2763168c1bbba',
+  CLIENT_ID: process.env.GITHUB_CLIENT_ID || '269168034e4e90cf4fe4',
   // Scope
   SCOPE: process.env.GITHUB_SCOPE || 'repo workflow',
   // Default Poll Timeout = 5 minutes
