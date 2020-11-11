@@ -9,12 +9,13 @@
     "categories": ["Azure Repos", "Azure Boards"],
     "targets": [
         {
-            "id": "Microsoft.VisualStudio.Services" 
+            "id": "Microsoft.VisualStudio.Services"
         }
     ],
     "scopes": [
         "vso.work",
-        "vso.code_full"
+        "vso.code_full",
+        "vso.build_execute"
     ],
     "contributions": [
         {
