@@ -355,6 +355,7 @@ export default function BranchSyncHub() {
         let repos: any = await octokit.repos.listForAuthenticatedUser();
         repos = sortBy(repos.data, ['full_name']);
         repos = map(repos, o => ({ ...o, id: `${o.id}`, text: o.full_name }));
+        console.log(repos);
         setGithubRepositories(repos);
       }
     }
