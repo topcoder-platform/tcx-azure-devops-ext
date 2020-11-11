@@ -15,7 +15,6 @@ https://marketplace.visualstudio.com/items?itemName=JustinGasperTopcodertest.top
 Once you have installed the plugin in your organization, you'll see:
 
 * New Dashboard widgets (`Topcoder X` and `Topcoder X Report`)
-* New Topcoder-X menu options on work items
 * New Topcoder-X tab on work items
 * New Topcoder-X section on work items
 * New Topcoder-X section under `Boards`
