@@ -53,46 +53,46 @@ export default function WITFormPage() {
   const [privateDescription, setPrivateDescription] = React.useState('');
   const [prize, setPrize] = React.useState('');
   const [sent, setSent] = React.useState(false);
-  const [projects, setProjects] = React.useState([]);
+  const [projects, setProjects] = React.useState<any[]>([]);
 
   /**
    * Builds a URL for a Work Item
-   * @param {string} id Work Item ID
+   * @param id Work Item ID
    */
-  const buildWorkItemUrl = (id) => {
+  const buildWorkItemUrl = (id: string) => {
     return `https://dev.azure.com/${VSS.getWebContext().host.name}/${VSS.getWebContext().project.name}/_workitems/edit/${id}`;
   };
 
   /**
    * Creates a TC challenge, given a set of parameters
-   * @param {Object} params Challenge Parameters
-   * @param {string} params.id Work Item's ID
-   * @param {string} params.title Challenge's Title
-   * @param {string} params.body Challenge's Description
-   * @param {string} params.privateDescription Challenge's Private Description
-   * @param {string} params.prize Challenge's Prize
-   * @param {string} params.projectId Project ID udder which Challenge will be created
+   * @param params Challenge Parameters
+   * @param params.id Work Item's ID
+   * @param params.title Challenge's Title
+   * @param params.body Challenge's Description
+   * @param params.privateDescription Challenge's Private Description
+   * @param params.prize Challenge's Prize
+   * @param params.projectId Project ID udder which Challenge will be created
    */
-  const createTopcoderChallenge = async ({
-    id,
-    title,
-    body,
-    privateDescription,
-    prize,
-    projectId
+  const createTopcoderChallenge = async (params: {
+    id: string,
+    title: string,
+    body: string,
+    privateDescription: string,
+    prize: number,
+    projectId: number
   }) => {
     // Get Extension Data service
-    const dataService = await VSS.getService(VSS.ServiceIds.ExtensionData);
+    const dataService: any = await VSS.getService(VSS.ServiceIds.ExtensionData);
     try {
       // Format body and create challenge
-      const bodyWithRef = body + `\n\n### Reference: ${buildWorkItemUrl(id)}`;
+      const bodyWithRef = `${params.body}\n\n### Reference: ${buildWorkItemUrl(params.id)}`;
       const res = await createChallenge({
-        name: title,
+        name: params.title,
         detailedRequirements: bodyWithRef,
-        projectId: Number(projectId),
-        directProjectId: get(find(projects, { id: Number(projectId) }), 'directProjectId'),
-        prize,
-        privateDescription
+        projectId: Number(params.projectId),
+        directProjectId: get(find(projects, { id: Number(params.projectId) }), 'directProjectId'),
+        prize: params.prize,
+        privateDescription: params.privateDescription
       });
       // Update UI
       setSent(true);
@@ -102,10 +102,10 @@ export default function WITFormPage() {
       const values = {
         [`${ctxProjectId}_${id}`]: res.data.id,
         [`${ctxProjectId}_${id}_PRIZE`]: prize.toString(),
-        [`${ctxProjectId}_${id}_TITLE`]: title,
-        [`${ctxProjectId}_${id}_DESC`]: body,
-        [`${ctxProjectId}_${id}_PRIVATE_DESC`]: privateDescription,
-        [`${ctxProjectId}_${id}_TC_PROJECT`]: projectId,
+        [`${ctxProjectId}_${id}_TITLE`]: params.title,
+        [`${ctxProjectId}_${id}_DESC`]: params.body,
+        [`${ctxProjectId}_${id}_PRIVATE_DESC`]: params.privateDescription,
+        [`${ctxProjectId}_${id}_TC_PROJECT`]: params.projectId,
       };
       await dataService.setValues(values, { scopeType: 'User' });
     } catch (error) {
@@ -125,7 +125,7 @@ export default function WITFormPage() {
         return;
       }
       // Get Extension Data service
-      const dataService = await VSS.getService(VSS.ServiceIds.ExtensionData);
+      const dataService: any = await VSS.getService(VSS.ServiceIds.ExtensionData);
       // Project ID is used as prefix in all field keys, store it as constant
       const ctxProjectId = VSS.getWebContext().project.id;
       // Set values for the challenge ID, title, description, prize, private description and project ID fields.
@@ -191,7 +191,7 @@ export default function WITFormPage() {
    * It retrieves WorkItem/DevOps Project-related information using the VSS Extension SDK.
    */
   React.useEffect(() => {
-    VSS.require(["TFS/WorkItemTracking/Services"], function (_WorkItemServices) {
+    VSS.require(["TFS/WorkItemTracking/Services"], function (_WorkItemServices: any) {
       /**
        * This function extracts the default title and description for the challenge from the work-item.
        */
@@ -210,7 +210,7 @@ export default function WITFormPage() {
       VSS.register("tcx-wit-form-page", function () {
         return {
           onFieldChanged: () => updateField(),
-          onLoaded: function (args) {
+          onLoaded: function (args: any) {
             if (!args.id) {
               return;
             }
@@ -287,7 +287,7 @@ export default function WITFormPage() {
           items={projects}
           disabled={sent}
           selection={selection}
-          onSelect={event => setProjectId(event.target.value)}
+          onSelect={event => setProjectId(get(event, 'target.value'))}
         />
       </div>
       {/* Title text Field */}

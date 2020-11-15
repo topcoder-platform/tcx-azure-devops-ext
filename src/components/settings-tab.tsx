@@ -27,16 +27,16 @@ export default function SettingsTab() {
   const classes = useStyles();
   const [token, setToken] = React.useState('');
   const [repo, setRepo] = React.useState('');
-  const [repos, setRepos] = React.useState([]);
+  const [repos, setRepos] = React.useState<any[]>([]);
 
-  const fetchRepos = (token) => {
+  const fetchRepos = (token: string) => {
     const github = new GitHub({
       token
     });
-    github.getUser().listRepos().then(res => {
+    github.getUser().listRepos().then((res: any) => {
       setRepos(res.data);
-      VSS.getService(VSS.ServiceIds.ExtensionData).then((dataService) => {
-        dataService.getValue(VSS.getWebContext().project.id + '_GITHUB_REPO', {scopeType: 'User'}).then(githubRepo => {
+      VSS.getService(VSS.ServiceIds.ExtensionData).then((dataService: any) => {
+        dataService.getValue(VSS.getWebContext().project.id + '_GITHUB_REPO', {scopeType: 'User'}).then((githubRepo: string) => {
           setRepo(githubRepo);
         });
       });
@@ -44,8 +44,8 @@ export default function SettingsTab() {
   };
 
   React.useEffect(() => {
-    VSS.getService(VSS.ServiceIds.ExtensionData).then((dataService) => {
-      dataService.getValue(VSS.getWebContext().project.id + '_GITHUB_TOKEN', {scopeType: 'User'}).then(githubToken => {
+    VSS.getService(VSS.ServiceIds.ExtensionData).then((dataService: any) => {
+      dataService.getValue(VSS.getWebContext().project.id + '_GITHUB_TOKEN', {scopeType: 'User'}).then((githubToken: string) => {
         setToken(githubToken);
         if (githubToken) {
           fetchRepos(githubToken);
@@ -55,14 +55,14 @@ export default function SettingsTab() {
   }, []);
 
   const handleSaveButtonClick = () => {
-    VSS.getService(VSS.ServiceIds.ExtensionData).then(dataService => {
+    VSS.getService(VSS.ServiceIds.ExtensionData).then((dataService: any) => {
       dataService.setValue(VSS.getWebContext().project.id + '_GITHUB_TOKEN', token, {scopeType: 'User'});
     });
     fetchRepos(token);
   };
-  const handleRepoSelected = (event) => {
+  const handleRepoSelected = (event: any) => {
     setRepo(event.target.value);
-    VSS.getService(VSS.ServiceIds.ExtensionData).then(dataService => {
+    VSS.getService(VSS.ServiceIds.ExtensionData).then((dataService: any) => {
       dataService.setValue(VSS.getWebContext().project.id + '_GITHUB_REPO', event.target.value, {scopeType: 'User'});
     });
   };
@@ -94,12 +94,9 @@ export default function SettingsTab() {
             value={repo}
             onChange={handleRepoSelected}
           >
-          {repos
-            .map((row) => {
-              return (
-                <MenuItem value={row.full_name}>{row.full_name}</MenuItem>
-                );
-            })}
+          {repos.map((row) => (
+            <MenuItem value={row.full_name}>{row.full_name}</MenuItem>
+          ))}
           </Select>
         </FormControl>
       </div>

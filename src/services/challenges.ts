@@ -12,18 +12,18 @@ import {
 
 /**
  * Fetch challenges from v5 API
- * @param filters
  * @param params
  */
-export function fetchChallenges(filters, params) {
-  const query = {
-    ...filters,
-    ...params
-  };
-  return axiosInstance.get(`${CHALLENGE_API_URL}?${qs.stringify(query, { encode: false })}`);
+export function fetchChallenges(params: any = {}) {
+  const queryString = qs.stringify(params, { encode: false });
+  return axiosInstance.get(`${CHALLENGE_API_URL}?${queryString}`);
 }
 
-export function createChallenge(challenge) {
+/**
+ * Creates a TC Challenge
+ * @param challenge TC Challenge Properties
+ */
+export function createChallenge(challenge: any) {
   const body = assign({}, NEW_CHALLENGE_TEMPLATE, {
     typeId: TYPE_ID_TASK,
     name: challenge.name,
@@ -46,6 +46,10 @@ export function createChallenge(challenge) {
   return axiosInstance.post(`${CHALLENGE_API_URL}`, body);
 }
 
-export function getChallenge(challengeId) {
+/**
+ * Gets the details for a particular Topcoder Challenge
+ * @param challengeId Challenge ID
+ */
+export function getChallenge(challengeId: string) {
   return axiosInstance.get(`${CHALLENGE_API_URL}/${challengeId}`);
 }

@@ -20,7 +20,6 @@ export const axiosInstance = axios.create({
 
 /**
  * Api request for getting device authentication
- * @returns {Promise<*>}
  */
 export function getDeviceAuthentication() {
   return axiosInstance.post(AUTH0_DEVICE_CODE_URL, qs.stringify({
@@ -33,9 +32,8 @@ export function getDeviceAuthentication() {
 /**
  * Api request for getting token
  * @param deviceCode the device code from getDeviceAuthentication
- * @returns {Promise<*>}
  */
-export function getDeviceToken(deviceCode) {
+export function getDeviceToken(deviceCode: string) {
   return axiosInstance.post(AUTH0_GET_TOKEN_URL, qs.stringify({
     client_id: AUTH0_CLIENT_ID,
     grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
@@ -46,9 +44,8 @@ export function getDeviceToken(deviceCode) {
 /**
  * Api request for getting refreshed token
  * @param deviceCode the device code from getDeviceAuthentication
- * @returns {Promise<*>}
  */
-export function getRefreshedDeviceToken(refreshToken) {
+export function getRefreshedDeviceToken(refreshToken: string) {
   return axiosInstance.post(AUTH0_GET_TOKEN_URL, qs.stringify({
     client_id: AUTH0_CLIENT_ID,
     grant_type: 'refresh_token',
