@@ -3,7 +3,6 @@ import { Dropdown } from 'azure-devops-ui/Dropdown';
 import { Toggle } from 'azure-devops-ui/Toggle';
 import { Card } from "azure-devops-ui/Card";
 import { Button } from "azure-devops-ui/Button";
-import { makeStyles } from '@material-ui/core';
 import { DropdownSelection } from 'azure-devops-ui/Utilities/DropdownSelection';
 import isNil from 'lodash/isNil';
 import findIndex from 'lodash/findIndex';
@@ -15,13 +14,14 @@ import startCase from 'lodash/startCase';
 import template from 'lodash/template';
 import sortBy from 'lodash/sortBy';
 import forEach from 'lodash/forEach';
+import { makeStyles } from '@material-ui/core';
 
 import { ReposGetResponseData, ReposListBranchesResponseData } from '@octokit/types';
 import { GitBranchStats, GitRepository } from 'TFS/VersionControl/Contracts';
 import { IterableElement } from 'type-fest';
 
 import { AlertDialog, getDefaultState } from './dialogs/alert-dialog';
-import { AZURE_CONFIG, GITHUB_CONFIG } from '../../config';
+import { AZURE_CONFIG, GITHUB_CONFIG, GITLAB_CONFIG } from '../../config';
 import {
   createOrUpdateAzureFile,
   createBuildDefinition,
@@ -30,12 +30,14 @@ import {
   getAdoClients
 } from '../../services/azure';
 import {
-  createOrUpdateRepoSecret,
+  createOrUpdateGithubRepoSecret,
   createOrUpdateGitHubFile,
-  waitForWorkflow,
+  waitForGithubWorkflow,
   getOctokitInstance
 } from '../../services/github';
 import { SetupInProgress } from './dialogs/setup-in-progress';
+import { ConditionalChildren } from 'azure-devops-ui/ConditionalChildren';
+import { IGitlabRepo, getGitlabInstance, createOrUpdateGitlabRepoSecret, IGitlabBranch, createOrUpdateGitlabFile, waitForGitlabPipeline } from '../../services/gitlab';
 
 
 export interface IBranchSyncConfig {
@@ -46,7 +48,10 @@ export interface IBranchSyncConfig {
   azureBranch?: GitBranchStats;
   githubRepository?: ReposGetResponseData;
   githubBranch?: IterableElement<ReposListBranchesResponseData>;
+  gitlabRepository?: IGitlabRepo;
+  gitlabBranch?: IGitlabBranch;
   twoWaySynchronization?: boolean;
+  repoHost: IterableElement<typeof repoHosts>;
 }
 
 export function getDefaultBranchSyncConfig(): IBranchSyncConfig {
@@ -54,7 +59,8 @@ export function getDefaultBranchSyncConfig(): IBranchSyncConfig {
     state: 'DRAFT',
     twoWaySynchronization: false,
     cardTitle: 'New Branch Sync Config',
-    cardExpanded: true
+    cardExpanded: true,
+    repoHost: 'GitHub'
   };
 }
 
@@ -83,7 +89,7 @@ const useStyles = makeStyles({
   fontBold: {
     fontWeight: 'bold'
   },
-  setAzurePatToken: {
+  tokenButton: {
     flex: '1',
     marginTop: 0,
     marginRight: '2px',
@@ -110,13 +116,21 @@ const useStyles = makeStyles({
   }
 });
 
+const repoHosts = [
+  'GitHub',
+  'GitLab'
+] as const;
+
 export interface IBranchSyncCardProps {
+  gitlabRepositories: IGitlabRepo[];
   githubRepositories: ReposGetResponseData[];
   azureRepositories: GitRepository[];
+  gitlabToken: string;
   githubToken: string;
   azurePersonalAccessToken: string | undefined;
   cardState: IBranchSyncConfig;
   setAzurePAT: (...args: any) => any;
+  requestGitlabToken: (...args: any) => any;
   onSaveState: (config: IBranchSyncConfig) => any;
   onDelete: (...args: any) => any;
 }
@@ -125,16 +139,24 @@ export default function BranchSyncCard(props: IBranchSyncCardProps) {
   const classes = useStyles();
 
   // Selection Refs
+  const repoHostSelection = useRef(new DropdownSelection());
+  const gitlabRepoSelection = useRef(new DropdownSelection());
+  const gitlabBranchSelection = useRef(new DropdownSelection());
   const githubRepoSelection = useRef(new DropdownSelection());
   const githubBranchSelection = useRef(new DropdownSelection());
   const azureRepoSelection = useRef(new DropdownSelection());
   const azureBranchSelection = useRef(new DropdownSelection());
 
-  // State Variable (Card State)
+  // State Variable (Card UI State)
   const [cardExpanded, setCardExpanded] = useState(true);
   const [cardTitle, setCardTitle] = useState('New Branch Sync Config');
   const [cardState, setCardState] = useState<IBranchSyncConfig["state"]>();
-  // const [cardState, setState] = useState<IBranchSyncConfig["state"]>();
+  // State Variable (Remote Repo)
+  const [repoHost, setRepoHost] = useState<IterableElement<typeof repoHosts>>('GitHub');
+  // State Variables (Gitlab)
+  const [gitlabRepository, setGitlabRepository] = useState<IGitlabRepo | undefined>(undefined);
+  const [gitlabBranches, setGitlabBranches] = useState<IGitlabBranch[]>([]);
+  const [gitlabBranch, setGitlabBranch] = useState<IGitlabBranch>();
   // State Variables (Github)
   const [githubRepository, setGithubRepository] = useState<ReposGetResponseData | undefined>(undefined);
   const [githubBranches, setGithubBranches] = useState<ReposListBranchesResponseData>([]);
@@ -153,6 +175,15 @@ export default function BranchSyncCard(props: IBranchSyncCardProps) {
   const [allowBranchSynchronization, setAllowBranchSynchronization] = useState(false);
   // State Variable (Is Branch Synchronization setup in progress)
   const [branchSynchronizationSetupInProgress, setBranchSynchronizationSetupInProgress] = useState(false);
+
+  /**
+   * The following effect will pre-select the Repo Host dropdown options once the page is loaded.
+   */
+  useEffect(() => {
+    if (repoHost) {
+      repoHostSelection.current.select(findIndex(repoHosts, i => i === repoHost));
+    }
+  }, [repoHost]);
 
   /**
    * The following effect will pre-select the Github Repository dropdown options once the page is loaded.
@@ -190,6 +221,24 @@ export default function BranchSyncCard(props: IBranchSyncCardProps) {
     }
   }, [azureBranches, azureBranch]);
 
+  /**
+   * The following effect will pre-select the Gitlab Repository dropdown options once the page is loaded.
+   */
+  useEffect(() => {
+    if (props.gitlabRepositories && props.gitlabRepositories.length > 0 && !isNil(gitlabRepository)) {
+      gitlabRepoSelection.current.select(findIndex(props.gitlabRepositories, { id: gitlabRepository.id }));
+    }
+  }, [props.gitlabRepositories, gitlabRepository]);
+
+  /**
+   * The following effect will pre-select the Gitlab Branch dropdown options once the page is loaded.
+   */
+  useEffect(() => {
+    if (gitlabBranches && gitlabBranches.length > 0 && !isNil(gitlabBranch)) {
+      gitlabBranchSelection.current.select(findIndex(gitlabBranches, { id: gitlabBranch.name } as any));
+    }
+  }, [gitlabBranches, gitlabBranch]);
+
   useEffect(() => {
     const propertySetterMap: Partial<{ [key in keyof IBranchSyncConfig]: any}> = {
       state: ((val) => {
@@ -204,7 +253,10 @@ export default function BranchSyncCard(props: IBranchSyncCardProps) {
       azureBranch: setAzureBranch,
       githubRepository: setGithubRepository,
       githubBranch: setGithubBranch,
-      twoWaySynchronization: setTwoWaySynchronization
+      gitlabRepository: setGitlabRepository,
+      gitlabBranch: setGitlabBranch,
+      twoWaySynchronization: setTwoWaySynchronization,
+      repoHost: setRepoHost,
     };
     forEach(propertySetterMap, (setterFn, propertyName) => {
       const stateValue = get(props.cardState, propertyName);
@@ -221,15 +273,24 @@ export default function BranchSyncCard(props: IBranchSyncCardProps) {
    */
   useEffect(() => {
     const validationParameters = [
-      githubBranch,
-      githubRepository,
       azureBranch,
       azureRepository,
-      props.azurePersonalAccessToken
+      props.azurePersonalAccessToken,
+      ...( repoHost === 'GitHub' ? [githubBranch, githubRepository] : [gitlabBranch, gitlabRepository] )
     ];
     const validated = every(map(validationParameters, (val) => !!(val)));
     setAllowBranchSynchronization(validated);
-  }, [azureBranch, azureRepository, githubBranch, githubRepository, props.azurePersonalAccessToken]);
+  }, [
+    azureBranch,
+    azureRepository,
+    githubBranch,
+    githubRepository,
+    gitlabBranch,
+    gitlabRepository,
+    props.azurePersonalAccessToken,
+    repoHost,
+    twoWaySynchronization
+  ]);
 
   /**
    * This effect is run any time the user selects a Github Repository.
@@ -278,6 +339,29 @@ export default function BranchSyncCard(props: IBranchSyncCardProps) {
   }, [azureRepository]);
 
   /**
+   * This effect is run any time the user selects a Gitlab Repository.
+   * It populates the Gitlab Branch selector.
+   */
+  useEffect(() => {
+    async function getBranchesForGitlabRepository() {
+      // Get REST client
+      const client = getGitlabInstance();
+      // Fetch the project ID
+      const projectId = get(gitlabRepository, 'id');
+      // Stop if either are not found.
+      if (!projectId) {
+        return;
+      }
+      // Populate the Gitlab Branch selector.
+      let branchList: any = await client.Branches.all(projectId, { perPage: 300 });
+      branchList = sortBy(branchList, ['name']);
+      branchList = map(branchList, o => ({ ...o, id: o.name, text: o.name }));
+      setGitlabBranches(branchList);
+    }
+    getBranchesForGitlabRepository();
+  }, [gitlabRepository]);
+
+  /**
    * Save the current state
    */
   async function saveState(state: Partial<IBranchSyncConfig> = {}) {
@@ -287,9 +371,12 @@ export default function BranchSyncCard(props: IBranchSyncCardProps) {
       state: cardState!,
       azureBranch,
       azureRepository,
+      gitlabBranch,
+      gitlabRepository,
       githubBranch,
       githubRepository,
       twoWaySynchronization,
+      repoHost,
       ...state
     });
   }
@@ -308,6 +395,24 @@ export default function BranchSyncCard(props: IBranchSyncCardProps) {
   function deselectAzureBranch() {
     setAzureBranch(undefined);
     azureBranchSelection.current.value = [];
+  }
+
+  async function deselectGithubAndGitlab(repoHost: IterableElement<typeof repoHosts>) {
+    setGithubRepository(undefined);
+    githubRepoSelection.current.value = [];
+    setGithubBranch(undefined);
+    githubBranchSelection.current.value = [];
+    setGitlabRepository(undefined);
+    gitlabRepoSelection.current.value = [];
+    setGitlabBranch(undefined);
+    gitlabBranchSelection.current.value = [];
+    saveState({
+      repoHost,
+      githubRepository: undefined,
+      githubBranch: undefined,
+      gitlabRepository: undefined,
+      gitlabBranch: undefined
+    });
   }
 
   /**
@@ -338,10 +443,14 @@ export default function BranchSyncCard(props: IBranchSyncCardProps) {
     const upcomingCardState: typeof cardState = branchSynchronizationValue ? 'ENABLED' : 'DISABLED';
     const githubBranchName = get(githubBranch, 'name');
     const githubRepoName = get(githubRepository, 'name');
+    const gitlabBranchName = get(gitlabBranch, 'name');
+    const gitlabRepoName = get(gitlabRepository, 'name');
     const azureBranchName = get(azureBranch, 'name');
     const azureRepoName = get(azureRepository, 'name');
     const comparator = twoWaySynchronization ? '↔' : '→';
-    const cardTitle = `${githubBranchName}@${githubRepoName} ${comparator} ${azureBranchName}@${azureRepoName} (${startCase(upcomingCardState)})`;
+    const srcName = repoHost === 'GitLab' ? `${gitlabBranchName}@${gitlabRepoName}` : `${githubBranchName}@${githubRepoName}`;
+    const targetName = `${azureBranchName}@${azureRepoName}`;
+    const cardTitle = `${srcName} ${comparator} ${targetName} (${startCase(upcomingCardState)})`;
     // Save State
     props.onSaveState({
       cardTitle,
@@ -351,7 +460,10 @@ export default function BranchSyncCard(props: IBranchSyncCardProps) {
       azureRepository,
       githubBranch,
       githubRepository,
-      twoWaySynchronization
+      gitlabBranch,
+      gitlabRepository,
+      twoWaySynchronization,
+      repoHost
     });
   }
 
@@ -368,7 +480,11 @@ export default function BranchSyncCard(props: IBranchSyncCardProps) {
     }
     try {
       setBranchSynchronizationSetupInProgress(true);
-      await setupGithubWorkflow();
+      if (repoHost === 'GitHub') {
+        await setupGithubWorkflow();
+      } else {
+        await setupGitlabWorkflow();
+      }
       if (twoWaySynchronization) {
         await setupAzureWorkflow();
       }
@@ -409,22 +525,26 @@ export default function BranchSyncCard(props: IBranchSyncCardProps) {
   }
 
   /**
-   * Setup Azure Workflow which will push ADO commits to Github.
+   * Setup Azure Workflow which will push ADO commits to Github/Gitlab.
    */
   async function setupAzureWorkflow() {
+    const isGithub = repoHost === 'GitHub';
+    const remoteRepo = isGithub ? githubRepository : gitlabRepository;
+    const remoteBranch = isGithub ? githubBranch : gitlabBranch;
     // Substitute values in templates to get manifest path and manifest contents
     const templateSettings = {
       interpolate: /<%=([\s\S]+?)%>/g
     };
     const manifestPath = template(AZURE_CONFIG.MANIFEST_PATH, templateSettings)({
-      repoName: kebabCase(githubRepository!.name),
-      repoBranch: kebabCase(githubBranch!.name)
+      repoName: kebabCase(remoteRepo!.name),
+      repoBranch: kebabCase(remoteBranch!.name)
     });
     const manifestContents = template(AZURE_CONFIG.MANIFEST_TEMPLATE, templateSettings)({
       secretName: AZURE_CONFIG.SECRET_NAME,
-      repoUrl: get(githubRepository!, 'clone_url').replace('https://', ''),
+      repoUrl: get(remoteRepo!, isGithub ? 'clone_url' : 'http_url_to_repo').replace('https://', ''),
       azureBranchName: azureBranch!.name,
-      githubBranchName: githubBranch!.name
+      remoteRepoBranchName: isGithub ? githubBranch!.name : gitlabBranch!.name,
+      remoteRepoName: repoHost
     });
     // Upload the pipeline definition
     await createOrUpdateAzureFile(
@@ -439,7 +559,7 @@ export default function BranchSyncCard(props: IBranchSyncCardProps) {
       manifestPath,
       azureRepository!,
       azureBranch!,
-      props.githubToken
+      isGithub ? props.githubToken : `gitlab-ci-token:${props.gitlabToken}`
     );
     // Trigger a build
     const build = await triggerBuild(
@@ -456,7 +576,7 @@ export default function BranchSyncCard(props: IBranchSyncCardProps) {
    */
   async function setupGithubWorkflow() {
     // Store the PAT as a secret
-    await createOrUpdateRepoSecret(
+    await createOrUpdateGithubRepoSecret(
       githubRepository!,
       GITHUB_CONFIG.SECRET_NAME,
       props.azurePersonalAccessToken!
@@ -483,9 +603,44 @@ export default function BranchSyncCard(props: IBranchSyncCardProps) {
       GITHUB_CONFIG.COMMIT_MESSAGE
     );
     // Wait for the Workflow to complete
-    await waitForWorkflow(
+    await waitForGithubWorkflow(
       githubRepository!,
       manifestPath,
+      3,
+      180
+    );
+  }
+
+  /**
+   * Setup Gitlab Workflow which will push Gitlab commits to ADO.
+   */
+  async function setupGitlabWorkflow() {
+    // Store the PAT as a variable
+    await createOrUpdateGitlabRepoSecret(
+      gitlabRepository!,
+      GITLAB_CONFIG.SECRET_NAME,
+      props.azurePersonalAccessToken!
+    );
+    // Substitute values in templates to generate manifest contents
+    const templateSettings = { interpolate: /<%=([\s\S]+?)%>/g };
+    const manifestContentTemplate = template(GITLAB_CONFIG.MANIFEST_TEMPLATE, templateSettings);
+    const manifestContent = manifestContentTemplate({
+      secretName: GITLAB_CONFIG.SECRET_NAME,
+      repoUrl: get(azureRepository!, 'webUrl').replace('https://', ''),
+      azureBranchName: azureBranch!.name,
+      gitlabBranchName: gitlabBranch!.name
+    });
+    // Create or update the Workflow manifest
+    await createOrUpdateGitlabFile(
+      gitlabRepository!,
+      gitlabBranch!,
+      GITLAB_CONFIG.MANIFEST_PATH,
+      manifestContent,
+      GITLAB_CONFIG.COMMIT_MESSAGE
+    );
+    // Wait for the Workflow to complete
+    await waitForGitlabPipeline(
+      gitlabRepository!,
       3,
       180
     );
@@ -520,31 +675,70 @@ export default function BranchSyncCard(props: IBranchSyncCardProps) {
           <div className={classes.fontBold}>
             { branchSynchronization ? 'Enabled' : 'Disabled' }
           </div>
-          {/* Github Repo */}
-          <div><label>Github Repo</label></div>
+          {/* Repo Host */}
+          <div><label>Repo Host</label></div>
           <Dropdown
-            placeholder="Select Github Repo"
-            items={props.githubRepositories as any}
+            placeholder="Select Repo Host"
+            items={repoHosts as any}
             disabled={branchSynchronization}
-            selection={githubRepoSelection.current}
+            selection={repoHostSelection.current}
             onSelect={(_, e) => {
-              setGithubRepository(e as any);
-              deselectGithubBranch();
-              saveState({ githubRepository: e as any });
+              setRepoHost(e.text as any);
+              deselectGithubAndGitlab(e.text as any);
             }}
           />
-          {/* Github Branch */}
-          <div><label>Github Branch</label></div>
-          <Dropdown
-            placeholder="Select Github Branch"
-            items={githubBranches as any}
-            disabled={!githubRepository || branchSynchronization}
-            selection={githubBranchSelection.current}
-            onSelect={(_, e) => {
-              setGithubBranch(e as any);
-              saveState({ githubBranch: e as any });
-            }}
-          />
+          {/* Github Repo */}
+          <ConditionalChildren renderChildren={repoHost === 'GitHub'}>
+            <div><label>Github Repo</label></div>
+            <Dropdown
+              placeholder="Select Github Repo"
+              items={props.githubRepositories as any}
+              disabled={branchSynchronization}
+              selection={githubRepoSelection.current}
+              onSelect={(_, e) => {
+                setGithubRepository(e as any);
+                deselectGithubBranch();
+                saveState({ githubRepository: e as any });
+              }}
+            />
+            {/* Github Branch */}
+            <div><label>Github Branch</label></div>
+            <Dropdown
+              placeholder="Select Github Branch"
+              items={githubBranches as any}
+              disabled={!githubRepository || branchSynchronization}
+              selection={githubBranchSelection.current}
+              onSelect={(_, e) => {
+                setGithubBranch(e as any);
+                saveState({ githubBranch: e as any });
+              }}
+            />
+          </ConditionalChildren>
+          <ConditionalChildren renderChildren={repoHost === 'GitLab'}>
+            <div><label>GitLab Repo</label></div>
+            <Dropdown
+              placeholder="Select GitLab Repo"
+              items={props.gitlabRepositories as any}
+              disabled={branchSynchronization}
+              selection={gitlabRepoSelection.current}
+              onSelect={(_, e) => {
+                setGitlabRepository(e as any);
+                saveState({ gitlabRepository: e as any });
+              }}
+            />
+            {/* Gitlab Branch */}
+            <div><label>Gitlab Branch</label></div>
+            <Dropdown
+              placeholder="Select Gitlab Branch"
+              items={gitlabBranches as any}
+              disabled={!gitlabRepository || branchSynchronization}
+              selection={gitlabBranchSelection.current}
+              onSelect={(_, e) => {
+                setGitlabBranch(e as any);
+                saveState({ gitlabBranch: e as any });
+              }}
+            />
+          </ConditionalChildren>
           {/* Azure Repo */}
           <div><label>Azure Repo</label></div>
           <Dropdown
@@ -573,8 +767,8 @@ export default function BranchSyncCard(props: IBranchSyncCardProps) {
           {/* Two-Way Synchronization */}
           <div><label>Two-Way Synchronization</label></div>
           <Toggle
-            offText={"Only push commits from Github to Azure DevOps."}
-            onText={"Push commits from Github to Azure DevOps and vice versa."}
+            offText={`Only push commits from ${repoHost} to Azure DevOps.`}
+            onText={`Push commits from ${repoHost} to Azure DevOps and vice versa.`}
             checked={twoWaySynchronization}
             disabled={branchSynchronization}
             onChange={(_event, value) => {
@@ -584,10 +778,19 @@ export default function BranchSyncCard(props: IBranchSyncCardProps) {
           />
           <div></div>
           <div></div>
+          {/* GitLab Token */}
+          {!(props.gitlabToken) && (repoHost === 'GitLab') && <div className={classes.controlButtonContainer}>
+            <Button
+              className={classes.tokenButton}
+              text={'Set GitLab PAT Token'}
+              primary={true}
+              onClick={() => props.requestGitlabToken()}
+            />
+          </div>}
           {/* Azure PAT Token */}
           {!(props.azurePersonalAccessToken) && twoWaySynchronization && <div className={classes.controlButtonContainer}>
             <Button
-              className={classes.setAzurePatToken}
+              className={classes.tokenButton}
               text={'Set Azure PAT Token'}
               primary={true}
               onClick={() => props.setAzurePAT()}

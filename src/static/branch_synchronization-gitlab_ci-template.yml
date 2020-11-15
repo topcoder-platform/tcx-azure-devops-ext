@@ -1,0 +1,9 @@
+before_script:
+  - apt-get -qq update
+
+deploy:
+  script:
+    - git remote add secondary https://$<%= secretName %>@<%= repoUrl %>
+    - git push secondary HEAD:refs/heads/<%= azureBranchName %> --force --q
+  only:
+    - <%= gitlabBranchName %>

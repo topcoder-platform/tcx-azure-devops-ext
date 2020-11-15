@@ -99,7 +99,7 @@ export async function checkAuthorizationStatus(authInitResponse: IGithubAuthInit
  * @param secretName Name of the secret
  * @param secretValue Value of the secret
  */
-export async function createOrUpdateRepoSecret(
+export async function createOrUpdateGithubRepoSecret(
   githubRepository: ReposGetResponseData,
   secretName: string,
   secretValue: string
@@ -184,9 +184,9 @@ export async function createOrUpdateGitHubFile(
  * @param githubRepository GitHub Repository
  * @param workflowIdOrManifestPath Workflow ID (manifest path is also acceptable)
  * @param intervalInS Interval in seconds (for polling of status)
- * @param workflowIdOrManifestPath Timeout in seconds (for polling of status)
+ * @param timeoutInS Timeout in seconds (for polling of status)
  */
-export async function waitForWorkflow(
+export async function waitForGithubWorkflow(
   githubRepository: ReposGetResponseData,
   workflowIdOrManifestPath: string | number,
   intervalInS: number,

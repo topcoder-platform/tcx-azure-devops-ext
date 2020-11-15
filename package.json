@@ -5,6 +5,8 @@
   "homepage": "./",
   "dependencies": {
     "@babel/core": "7.9.0",
+    "@gitbeaker/browser": "^25.3.0",
+    "@gitbeaker/core": "^25.3.0",
     "@material-ui/core": "^4.11.0",
     "@material-ui/icons": "^4.9.1",
     "@octokit/rest": "^18.0.6",

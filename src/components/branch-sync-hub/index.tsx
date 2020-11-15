@@ -12,18 +12,17 @@ import { ConditionalChildren } from "azure-devops-ui/ConditionalChildren";
 import { ZeroData, ZeroDataActionType } from 'azure-devops-ui/ZeroData';
 
 import { GitRepository } from 'TFS/VersionControl/Contracts';
-import {
-  ReposGetResponseData,
-} from '@octokit/types';
+import { ReposGetResponseData } from '@octokit/types';
 
 import { poll } from '../../utils/token-poll';
-import { GITHUB_CONFIG } from '../../config';
+import { GITHUB_CONFIG, GITLAB_CONFIG } from '../../config';
 import { getAdoClients } from '../../services/azure';
 import { GithubSyncDialog } from './dialogs/github-sync-dialog';
 import { LoadingDialog } from './dialogs/loading-dialog';
 import { AlertDialog, getDefaultState as getAlertDialogDefaultState } from './dialogs/alert-dialog';
-import { AzurePatTokenDialog, getDefaultState as getAzurePatDialogDefaultState } from './dialogs/azure-pat-dialog';
+import { TokenDialog, getDefaultState as getTokenDialogDefaultState } from './dialogs/token-dialog';
 import BranchSyncCard, { getDefaultBranchSyncConfig, IBranchSyncConfig } from './branch-sync-card';
+import { IGitlabRepo, initializeGitlabInstance } from '../../services/gitlab';
 import {
   checkAuthorizationStatus,
   IGithubAuthInitResponse,
@@ -65,6 +64,7 @@ const useStyles = makeStyles({
 
 const defaultState = {
   githubToken: '',
+  gitlabToken: '',
   azurePersonalAccessToken: '',
   branchSyncConfigs: []
 };
@@ -80,14 +80,18 @@ export default function BranchSyncHub() {
   const [githubAuthDialogOpen, setGithubAuthDialogOpen] = useState(false);
   // Alert Dialog State - Tracks whether it is open, it's text and it's title.
   const [alertDialogState, setAlertDialogState] = useState(getAlertDialogDefaultState());
-  // Azure PAT Token Dialog State - Tracks whether it is open, it's text and it's title.
-  const [azurePatTokenDialog, setAzurePatTokenDialog] = useState(getAzurePatDialogDefaultState());
+  // Token Dialog State - Tracks whether it is open, it's text and it's title.
+  const [tokenDialogState, setTokenDialogState] = useState(getTokenDialogDefaultState());
   // Stores the Github Auth Init Response.
   const [githubAuthInitResponse, setGithubAuthInitResponse] = useState<IGithubAuthInitResponse | undefined>();
   // Stores the Github OAuth token.
   const [githubToken, setGithubToken] = useState<string>(defaultState.githubToken);
+  // Stores the Gitlab OAuth token.
+  const [gitlabToken, setGitlabToken] = useState<string>(defaultState.gitlabToken);
   // Github Repositories
   const [githubRepositories, setGithubRepositories] = useState<ReposGetResponseData[]>([]);
+  // Gitlab Repositories
+  const [gitlabRepositories, setGitlabRepositories] = useState<IGitlabRepo[]>([]);
   // Azure Repositories
   const [azureRepositories, setAzureRepositories] = useState<GitRepository[]>([]);
   // Azure PAT Token
@@ -98,6 +102,7 @@ export default function BranchSyncHub() {
   // Tracks the document value
   interface BranchSyncHubDocument {
     githubToken: typeof githubToken;
+    gitlabToken: typeof gitlabToken;
     azurePersonalAccessToken: typeof azurePersonalAccessToken
     branchSyncConfigs: typeof branchSyncConfigs
   };
@@ -140,6 +145,7 @@ export default function BranchSyncHub() {
       const docName = `${ctxProjectId}_BRANCH_SYNC_HUB_STATE`;
       const docValue: BranchSyncHubDocument = {
         githubToken,
+        gitlabToken,
         azurePersonalAccessToken,
         branchSyncConfigs
       };
@@ -151,7 +157,7 @@ export default function BranchSyncHub() {
       return;
     }
     saveDocument();
-  }, [githubToken, azurePersonalAccessToken, branchSyncConfigs, loading]);
+  }, [githubToken, gitlabToken, azurePersonalAccessToken, branchSyncConfigs, loading]);
 
   /**
    * This effect runs whenever the document is updated/changed.
@@ -164,6 +170,7 @@ export default function BranchSyncHub() {
       }
       const propertySetterMapping = {
         githubToken: setGithubToken,
+        gitlabToken: setGitlabToken,
         azurePersonalAccessToken: setAzurePersonalAccessToken,
         branchSyncConfigs: setBranchSyncConfigs
       };
@@ -198,6 +205,26 @@ export default function BranchSyncHub() {
     }
     handleGithubTokenUpdate();
   }, [githubToken]);
+
+  /**
+   * This effect is run anytime the gitlab token changes.
+   * It replaces the Gitlab client with a new one which would have the updated token.
+   * It populates the Gitlab Projects field once the token is available.
+   */
+  useEffect(() => {
+    async function handleGitlabTokenUpdate() {
+      // Re-initialize Octokit
+      const client = initializeGitlabInstance(gitlabToken);
+      if (gitlabToken) {
+        // Populate the Gitlab Repositories Field
+        let repos: any = await client.Projects.all({ membership: true, perPage: 300 });
+        repos = sortBy(repos, ['path_with_namespace']);
+        repos = map(repos, o => ({ ...o, id: `${o.id}`, text: o.path_with_namespace }));
+        setGitlabRepositories(repos);
+      }
+    }
+    handleGitlabTokenUpdate();
+  }, [gitlabToken]);
 
   /**
    * This effect runs on page load.
@@ -315,15 +342,19 @@ export default function BranchSyncHub() {
     });
   }
 
+  /**
+   * Shows a dialog that accepts an Azure PAT token
+   */
   function showAzurePatDialog() {
-    setAzurePatTokenDialog({
+    setTokenDialogState({
       isOpen: true,
-      patManagerLink: `${VSS.getWebContext().account.uri}_usersSettings/tokens`,
+      mode: 'ADO',
+      externalLink: `${VSS.getWebContext().account.uri}_usersSettings/tokens`,
       onClose: (val) => {
         if (val) {
           setAzurePersonalAccessToken(val);
         }
-        setAzurePatTokenDialog(val => ({
+        setTokenDialogState(val => ({
           ...val,
           isOpen: false
         }));
@@ -331,10 +362,39 @@ export default function BranchSyncHub() {
     });
   }
 
+  /**
+   * Shows a dialog that accepts a Gitlab PAT token
+   */
+  function showGitlabPatDialog() {
+    setTokenDialogState({
+      isOpen: true,
+      mode: 'GitLab',
+      externalLink: GITLAB_CONFIG.PAT_DASHBOARD_LINK,
+      onClose: (val) => {
+        if (val) {
+          setGitlabToken(val);
+        }
+        setTokenDialogState(val => ({
+          ...val,
+          isOpen: false
+        }));
+      }
+    });
+  }
+
+
+  /**
+   * Allows adding an additional Branch Sync Config
+   */
   function addBranchSyncConfig() {
     setBranchSyncConfigs((val) => [...val, getDefaultBranchSyncConfig()]);
   }
 
+  /**
+   * Saves the state for a particular branch sync config.
+   * @param config Branch Sync Config
+   * @param idx Index of Branch Sync Config
+   */
   function saveBranchSyncConfig(config: IBranchSyncConfig, idx: number) {
     setBranchSyncConfigs([
       ...branchSyncConfigs.slice(0, idx),
@@ -343,6 +403,10 @@ export default function BranchSyncHub() {
     ]);
   }
 
+  /**
+   * Deletes a particular branch sync config.
+   * @param idx Index of Branch Sync Config
+   */
   function deleteSyncConfig(idx: number) {
     setBranchSyncConfigs([
       ...branchSyncConfigs.slice(0, idx),
@@ -415,9 +479,12 @@ export default function BranchSyncHub() {
               <BranchSyncCard
                 azureRepositories={azureRepositories}
                 githubRepositories={githubRepositories}
+                gitlabRepositories={gitlabRepositories}
                 githubToken={githubToken}
                 azurePersonalAccessToken={azurePersonalAccessToken}
+                gitlabToken={gitlabToken}
                 setAzurePAT={() => showAzurePatDialog()}
+                requestGitlabToken={() => showGitlabPatDialog()}
                 cardState={branchSyncConfig}
                 onSaveState={(config: IBranchSyncConfig) => saveBranchSyncConfig(config, idx)}
                 onDelete={() => deleteSyncConfig(idx)}
@@ -443,6 +510,6 @@ export default function BranchSyncHub() {
     <AlertDialog {...alertDialogState} />
 
     {/* Azure PAT Token */}
-    <AzurePatTokenDialog {...azurePatTokenDialog} />
+    <TokenDialog {...tokenDialogState} />
   </>);
 }
