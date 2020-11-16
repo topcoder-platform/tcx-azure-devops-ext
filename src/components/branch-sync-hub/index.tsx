@@ -440,10 +440,19 @@ export default function BranchSyncHub() {
               iconProps: {
                 iconName: 'Lock'
               },
-              text: 'Reset PAT Token',
-              id: 'remove-pat-token',
+              text: 'Reset Azure PAT Token',
+              id: 'reset-azure-pat-token',
               important: false,
-              onActivate: () => { /* Todo */ }
+              onActivate: () => setAzurePersonalAccessToken('')
+            },
+            {
+              iconProps: {
+                iconName: 'Lock'
+              },
+              text: 'Reset GitLab PAT Token',
+              id: 'reset-gitlab-pat-token',
+              important: false,
+              onActivate: () => setGitlabToken('')
             },
             {
               iconProps: {
