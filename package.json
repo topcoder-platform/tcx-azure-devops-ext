@@ -5,6 +5,8 @@
   "homepage": "./",
   "dependencies": {
     "@babel/core": "7.9.0",
+    "@gitbeaker/browser": "^25.3.0",
+    "@gitbeaker/core": "^25.3.0",
     "@material-ui/core": "^4.11.0",
     "@material-ui/icons": "^4.9.1",
     "@octokit/rest": "^18.0.6",
@@ -55,10 +57,11 @@
     "postcss-preset-env": "6.7.0",
     "postcss-safe-parser": "4.0.1",
     "qs": "^6.9.4",
-    "react": "^16.13.1",
+    "query-string": "^6.13.7",
+    "react": "^16.14.0",
     "react-app-polyfill": "^1.0.6",
     "react-dev-utils": "^10.2.1",
-    "react-dom": "^16.13.1",
+    "react-dom": "^16.14.0",
     "react-iframe": "^1.8.0",
     "react-router-dom": "^5.2.0",
     "resolve": "1.15.0",
@@ -70,7 +73,7 @@
     "ts-pnp": "1.1.6",
     "turndown": "^7.0.0",
     "tweetsodium": "0.0.5",
-    "typescript": "^4.0.5",
+    "typescript": "^3.9.7",
     "url-loader": "2.3.0",
     "vss-web-extension-sdk": "^5.141.0",
     "webpack": "4.42.0",
@@ -82,10 +85,12 @@
     "@octokit/types": "^5.5.0",
     "@types/jest": "^26.0.15",
     "@types/lodash": "^4.14.164",
+    "@types/material-ui": "^0.21.8",
     "@types/node": "^14.14.6",
     "@types/qs": "^6.9.5",
-    "@types/react": "^16.9.55",
+    "@types/react": "^16.9.56",
     "@types/react-dom": "^16.9.9",
+    "@types/turndown": "^5.0.0",
     "eslint": "^7.6.0",
     "eslint-config-topcoder": "^2.0.0",
     "eslint-plugin-babel": "^4.1.2",
@@ -172,6 +177,9 @@
       "jest-watch-typeahead/filename",
       "jest-watch-typeahead/testname"
     ]
+  },
+  "resolutions": {
+    "**/@types/react": "16.9.56"
   },
   "babel": {
     "presets": [

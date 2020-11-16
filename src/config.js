@@ -89,3 +89,16 @@ export const AZURE_CONFIG = {
   // Name of the pipeline
   PIPELINE_NAME: 'Branch Synchronization - TCX'
 };
+
+export const GITLAB_CONFIG = {
+  // PAT Dashboard Link
+  PAT_DASHBOARD_LINK: 'https://gitlab.com/-/profile/personal_access_tokens',
+  // Name of Repo Secret
+  SECRET_NAME: 'TCX_AZURE_PAT',
+  // Manifest Template
+  MANIFEST_TEMPLATE: require('./static/branch_synchronization-gitlab_ci-template.yml').default,
+  // CI manifest file path
+  MANIFEST_PATH: '.gitlab-ci.yml',
+  // Commit Message
+  COMMIT_MESSAGE: 'Initialize TCX Branch Synchronization.',
+};

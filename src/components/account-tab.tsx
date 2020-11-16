@@ -1,5 +1,7 @@
 import React from 'react';
 import clsx from 'clsx';
+import sortBy from 'lodash/sortBy';
+import get from 'lodash/get';
 import { makeStyles } from '@material-ui/core/styles';
 import { green } from '@material-ui/core/colors';
 import CircularProgress from '@material-ui/core/CircularProgress';
@@ -60,82 +62,55 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-function descendingComparator(a, b, orderBy) {
-  if (b[orderBy] < a[orderBy]) {
-    return -1;
-  }
-  if (b[orderBy] > a[orderBy]) {
-    return 1;
-  }
-  return 0;
-}
-
-function getComparator(order, orderBy) {
-  return order === 'desc'
-    ? (a, b) => descendingComparator(a, b, orderBy)
-    : (a, b) => -descendingComparator(a, b, orderBy);
-}
-
-function stableSort(array, comparator) {
-  const stabilizedThis = array.map((el, index) => [el, index]);
-  stabilizedThis.sort((a, b) => {
-    const order = comparator(a[0], b[0]);
-    if (order !== 0) return order;
-    return a[1] - b[1];
-  });
-  return stabilizedThis.map((el) => el[0]);
-}
-
 export default function AccountTab() {
   const classes = useStyles();
   const [loading, setLoading] = React.useState(false);
   const [loggedIn, setLoggedIn] = React.useState(false);
-  const [projects, setProjects] = React.useState([]);
+  const [projects, setProjects] = React.useState<any[]>([]);
   const [projectId, setProjectId] = React.useState('');
 
   const buttonClassname = clsx({
     [classes.buttonSuccess]: loggedIn,
   });
 
-  const getProjects = () => {
-    const filters = {};
-    filters['sort'] = 'lastActivityAt desc';
-    filters['memberOnly'] = false;
+  const getProjects = async () => {
+    const filters = {
+      sort: 'lastActivityAt desc',
+      memberOnly: false
+    };
 
-    fetchMemberProjects(filters)
-      .then(projects => {
+    const projects = await fetchMemberProjects(filters);
+    try {
         console.log(projects);
         setProjects(projects);
-        VSS.getService(VSS.ServiceIds.ExtensionData).then((dataService) => {
-          dataService.getValue(VSS.getWebContext().project.id + '_TOPCODER_PROJECT', {scopeType: 'User'}).then(topcoderProjectId => {
-            setProjectId(topcoderProjectId);
-          });
-        });
-      })
-      .catch((e) => {
+        const dataService: any = await VSS.getService(VSS.ServiceIds.ExtensionData);
+        const topcoderProjectId = await dataService.getValue(VSS.getWebContext().project.id + '_TOPCODER_PROJECT', {scopeType: 'User'});
+        setProjectId(topcoderProjectId);
+    } catch (e) {
         console.error(e);
         alert('Failed to fetch projects. ' + e.message);
-    });
+    };
   };
 
-  const handleProjectIdChange = (event) => {
+  const handleProjectIdChange = async (event: React.ChangeEvent<{
+    name?: string | undefined;
+    value: any;
+  }>) => {
     setProjectId(event.target.value);
-    VSS.getService(VSS.ServiceIds.ExtensionData).then(dataService => {
-      dataService.setValue(VSS.getWebContext().project.id + '_TOPCODER_PROJECT', event.target.value, {scopeType: 'User'});
-    });
+    const dataService: any = await VSS.getService(VSS.ServiceIds.ExtensionData);
+    dataService.setValue(VSS.getWebContext().project.id + '_TOPCODER_PROJECT', event.target.value, {scopeType: 'User'});
   };
 
   React.useEffect(() => {
     // Get data service
-    VSS.getService(VSS.ServiceIds.ExtensionData).then(function(dataService) {
+    VSS.getService(VSS.ServiceIds.ExtensionData).then(async function (dataService: any) {
       // Get value in user scope
-      dataService.getValue('access-token', {scopeType: 'User'}).then(function(value) {
+      const value = await dataService.getValue('access-token', {scopeType: 'User'});
         console.log('User scoped key value is ' + value);
         if (value) {
           setLoggedIn(true);
           getProjects();
         }
-      });
     });
   }, []);
 
@@ -146,7 +121,7 @@ export default function AccountTab() {
         const response = await getDeviceAuthentication();
         if (response.data) {
           window.open(response.data.verification_uri_complete, "_blank");
-          const pollingFn = getDeviceToken.bind(this, response.data.device_code);
+          const pollingFn = getDeviceToken.bind(null, response.data.device_code);
           try {
             const res = await poll(pollingFn, POLL_INTERVAL, POLL_TIMEOUT);
             debugger;
@@ -154,10 +129,10 @@ export default function AccountTab() {
             getProjects();
             setLoading(false);
             // Get data service
-            const dataService = await VSS.getService(VSS.ServiceIds.ExtensionData);
+            const dataService: any = await VSS.getService(VSS.ServiceIds.ExtensionData);
             // Set value in user scope
-            const accessToken = res.data.access_token;
-            const refreshToken = res.data.refresh_token;
+            const accessToken = get(res, 'data.access_token');
+            const refreshToken = get(res, 'data.refresh_token');
             const tokenData = {
               'access-token': accessToken,
               'refresh-token': refreshToken
@@ -213,12 +188,9 @@ export default function AccountTab() {
             value={projectId}
             onChange={handleProjectIdChange}
           >
-              {stableSort(projects, getComparator('asc', 'name'))
-              .map((row) => {
-                return (
-                  <MenuItem value={row.id}>{row.name}</MenuItem>
-                  );
-              })}
+              {sortBy(projects, ['name']).map((row, idx) =>
+                  <MenuItem key={idx} value={row.id}>{row.name}</MenuItem>
+              )}
             </Select>
             <FormHelperText>Please select a project</FormHelperText>
           </FormControl>
