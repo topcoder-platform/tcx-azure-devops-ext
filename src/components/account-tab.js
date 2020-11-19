@@ -156,7 +156,7 @@ export default function AccountTab() {
             // Get data service
             const dataService = await VSS.getService(VSS.ServiceIds.ExtensionData);
             // Set value in user scope
-            const accessToken = res.data.access_token;
+            const accessToken = res.data.id_token; // CWD-- this _should_ really be the access token but... topcoder
             const refreshToken = res.data.refresh_token;
             const tokenData = {
               'access-token': accessToken,
