@@ -20,8 +20,6 @@ export async function poll<T>(
       const val = await fn();
       clearTimeout(timeout);
       return val;
-    } catch (err) {
-      console.log(err);
-    }
+    } catch (_err) {}
   }
 }

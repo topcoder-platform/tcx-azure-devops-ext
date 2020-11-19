@@ -14,7 +14,7 @@ import ChallengeTab from './challenges-tab';
 import ProjectsTable from './projects-table';
 import SettingsTab from './settings-tab';
 
-function TabPanel(props) {
+function TabPanel(props: any) {
   const { children, value, index, ...other } = props;
 
   return (
@@ -40,7 +40,7 @@ TabPanel.propTypes = {
   value: PropTypes.any.isRequired,
 };
 
-function a11yProps(index) {
+function a11yProps(index: number) {
   return {
     id: `vertical-tab-${index}`,
     'aria-controls': `vertical-tabpanel-${index}`,
@@ -66,7 +66,7 @@ export default function VerticalTabs() {
   const classes = useStyles();
   const [value, setValue] = React.useState(0);
 
-  const handleChange = (_, newValue) => {
+  const handleChange = (_: any, newValue: number) => {
     setValue(newValue);
   };
 

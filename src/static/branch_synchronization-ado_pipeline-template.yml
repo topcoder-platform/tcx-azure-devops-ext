@@ -1,0 +1,13 @@
+trigger:
+  - <%= azureBranchName %>
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+  - bash: |
+      git remote add secondary https://$<%= secretName %>@<%= repoUrl %>
+      git push secondary HEAD:refs/heads/<%= remoteRepoBranchName %> --force --q
+    env:
+      <%= secretName %>: $(<%= secretName %>)
+    displayName: 'Push To <%= remoteRepoName %>'
