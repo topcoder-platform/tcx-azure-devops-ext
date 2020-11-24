@@ -22,10 +22,9 @@ export const POLL_TIMEOUT = process.env.REACT_APP_POLL_TIMEOUT ? parseInt(proces
 export const POLL_INTERVAL = process.env.REACT_APP_POLL_INTERVAL ? parseInt(process.env.REACT_APP_POLL_INTERVAL) : 10; // 10 seconds
 
 export const NEW_CHALLENGE_TEMPLATE = process.env.REACT_APP_NEW_CHALLENGE_TEMPLATE ? JSON.parse(process.env.REACT_APP_NEW_CHALLENGE_TEMPLATE) : {
+  descriptionFormat: "markdown",
   legacy: {
-    reviewType: 'community',
-    track: 'DEVELOP',
-    subTrack: 'CODE'
+    reviewType: 'community'
   },
   phases: [
     {
@@ -50,7 +49,13 @@ export const NEW_CHALLENGE_TEMPLATE = process.env.REACT_APP_NEW_CHALLENGE_TEMPLA
     }
   ],
   tags: ['Other'],
-  status: 'Draft'
+  status: 'Draft',
+  terms: [
+		{
+			id: "64d6e249-d7a5-4591-8ff5-e872f8a051f9",
+			roleId: "732339e7-8e30-49d7-9198-cccf9451e221"
+		}
+	],
 };
 export const TYPE_ID_TASK = process.env.TYPE_ID_TASK || '927abff4-7af9-4145-8ba1-577c16e64e2e';
 export const DEFAULT_TIMELINE_TEMPLATE_ID = process.env.REACT_APP_DEFAULT_TIMELINE_TEMPLATE_ID || '7ebf1c69-f62f-4d3a-bdfb-fe9ddb56861c';

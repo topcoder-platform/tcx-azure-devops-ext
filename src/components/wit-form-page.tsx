@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import TurndownService from 'turndown';
 import sortBy from 'lodash/sortBy';
 import get from 'lodash/get';
 import find from 'lodash/find';
+import isEqual from 'lodash/isEqual';
 import findIndex from 'lodash/findIndex';
 
 import { TextField, TextFieldWidth } from "azure-devops-ui/TextField";
@@ -11,14 +12,14 @@ import { DropdownSelection } from "azure-devops-ui/Utilities/DropdownSelection";
 import { Button } from "azure-devops-ui/Button";
 import { makeStyles } from '@material-ui/core/styles';
 
-import { createChallenge } from '../services/challenges';
+import { createOrUpdateChallenge } from '../services/challenges';
 import { fetchMemberProjects } from '../services/projects';
 
 // Turndown Service (Used to convert HTML into MarkDown)
 const turndownService = new TurndownService();
 
 
-const selection = new DropdownSelection();
+const projectSelection = new DropdownSelection();
 
 // Styles
 const useStyles = makeStyles((theme) => ({
@@ -44,6 +45,7 @@ const useStyles = makeStyles((theme) => ({
 export default function WITFormPage() {
   const classes = useStyles();
 
+  const [saving, setSaving] = React.useState(false);
   const [id, setId] = React.useState();
   const [witId, setWitId] = React.useState('');
   const [challengeId, setChallengeId] = React.useState('-');
@@ -54,6 +56,8 @@ export default function WITFormPage() {
   const [prize, setPrize] = React.useState('');
   const [sent, setSent] = React.useState(false);
   const [projects, setProjects] = React.useState<any[]>([]);
+  const [isEdited, setIsEdited] = React.useState(false);
+  const [initialValues, setInitialValues] = React.useState({ prize: '', title: '', description: '', privateSpecificaton: '' });
 
   /**
    * Builds a URL for a Work Item
@@ -67,14 +71,16 @@ export default function WITFormPage() {
    * Creates a TC challenge, given a set of parameters
    * @param params Challenge Parameters
    * @param params.id Work Item's ID
+   * @param params.challengeId (Optional) Challrnge ID
    * @param params.title Challenge's Title
    * @param params.body Challenge's Description
    * @param params.privateDescription Challenge's Private Description
    * @param params.prize Challenge's Prize
    * @param params.projectId Project ID udder which Challenge will be created
    */
-  const createTopcoderChallenge = async (params: {
+  const createOrUpdateTopcoderChallenge = async (params: {
     id: string,
+    challengeId: string,
     title: string,
     body: string,
     privateDescription: string,
@@ -84,15 +90,24 @@ export default function WITFormPage() {
     // Get Extension Data service
     const dataService: any = await VSS.getService(VSS.ServiceIds.ExtensionData);
     try {
+      setSaving(true);
       // Format body and create challenge
       const bodyWithRef = `${params.body}\n\n### Reference: ${buildWorkItemUrl(params.id)}`;
-      const res = await createChallenge({
+      const res = await createOrUpdateChallenge({
         name: params.title,
+        challengeId: params.challengeId,
         detailedRequirements: bodyWithRef,
         projectId: Number(params.projectId),
         directProjectId: get(find(projects, { id: Number(params.projectId) }), 'directProjectId'),
         prize: params.prize,
         privateDescription: params.privateDescription
+      });
+      // Set Initial Value
+      setInitialValues({
+        description,
+        privateSpecificaton: privateDescription,
+        prize,
+        title
       });
       // Update UI
       setSent(true);
@@ -111,6 +126,8 @@ export default function WITFormPage() {
     } catch (error) {
       console.error(error);
       alert(`Error sending work item to Topcoder. ${get(error, 'response.status')} ${get(error, 'response.data')}`);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -147,6 +164,12 @@ export default function WITFormPage() {
         setPrize(res[dataKeys.prizeKey]);
         setPrivateDescription(res[dataKeys.privateDescriptionKey]);
         setProjectId(res[dataKeys.projectIdKey]);
+        setInitialValues({
+          title: res[dataKeys.titleKey],
+          description: res[dataKeys.descKey],
+          prize: res[dataKeys.prizeKey],
+          privateSpecificaton: res[dataKeys.privateDescriptionKey]
+        });
       } else {
         // Set default Project ID
         setProjectId(res[dataKeys.defaultProjectIdKey]);
@@ -170,21 +193,35 @@ export default function WITFormPage() {
         };
         const projects = await fetchMemberProjects(filters);
         // Sort the projects and set their value
-        setProjects(sortBy(projects, ['name']).map(o => ({ id: `${o.id}`, text: o.name })));
+        setProjects(sortBy(projects, ['name']).map(o => ({ ...o, id: `${o.id}`, text: o.name })));
       } catch (e) {
         console.error(e);
         alert('Failed to fetch projects. ' + e.message);
       }
     }
-      getProjects();
+    getProjects();
   }, []);
 
-  useEffect(() => {
+  React.useEffect(() => {
+    // debugger;
     const idx = findIndex(projects, { id: `${projectId}` });
     if (idx >= 0) {
-      selection.select(idx);
+      projectSelection.select(idx);
     }
   }, [projectId, projects]);
+
+  /**
+   * Checks if values can be saved
+   */
+  React.useEffect(() => {
+    const alteredInitialValue: typeof initialValues = {
+      description,
+      privateSpecificaton: privateDescription,
+      prize,
+      title
+    };
+    setIsEdited(!isEqual(alteredInitialValue, initialValues));
+  }, [description, privateDescription, prize, title, initialValues]);
 
   /**
    * This effect is run on the page's initial render.
@@ -231,11 +268,6 @@ export default function WITFormPage() {
    * Validates the user-entered parameters, and creates a Topcoder challenge if validation succeeds.
    */
   const handleSendButtonClick = () => {
-    // Validation
-    if (sent) {
-      alert('Work item already sent to Topcoder.');
-      return;
-    }
     if (!witId) {
       alert('Unable to send unsaved work items. Please save it first.');
       return;
@@ -249,14 +281,23 @@ export default function WITFormPage() {
       return;
     }
     // Validation succeeded. Create a Topcoder challenge.
-    createTopcoderChallenge({
+    createOrUpdateTopcoderChallenge({
       id: witId,
+      challengeId,
       title,
       body: description,
       privateDescription,
       prize: parseInt(prize),
       projectId
     });
+  };
+
+  const handleDiscardButtonClicked = () => {
+    const { description, privateSpecificaton, prize, title } = initialValues;
+    setDescription(description);
+    setPrivateDescription(privateSpecificaton);
+    setPrize(prize);
+    setTitle(title);
   };
 
   return (
@@ -285,9 +326,9 @@ export default function WITFormPage() {
         <Dropdown
           placeholder="Select Project"
           items={projects}
-          disabled={sent}
-          selection={selection}
-          onSelect={event => setProjectId(get(event, 'target.value'))}
+          disabled={sent || saving}
+          selection={projectSelection}
+          onSelect={(_event, item) => setProjectId(+get(item, 'id'))}
         />
       </div>
       {/* Title text Field */}
@@ -296,7 +337,7 @@ export default function WITFormPage() {
         value={title}
         className={classes.formControl}
         onChange={event => setTitle(event.target.value)}
-        readOnly={sent}
+        readOnly={saving}
       />
       {/* Description text field */}
       <TextField
@@ -306,7 +347,7 @@ export default function WITFormPage() {
         value={description}
         className={classes.formControl}
         onChange={event => setDescription(event.target.value)}
-        readOnly={sent}
+        readOnly={saving}
       />
       {/* Private Specifications text field */}
       <TextField
@@ -316,7 +357,7 @@ export default function WITFormPage() {
         value={privateDescription}
         className={classes.formControl}
         onChange={event => setPrivateDescription(event.target.value)}
-        readOnly={sent}
+        readOnly={saving}
       />
       {/* Prize text field */}
       <TextField
@@ -324,16 +365,23 @@ export default function WITFormPage() {
         value={prize}
         className={classes.formControl}
         onChange={event => setPrize(event.target.value)}
-        readOnly={sent}
+        readOnly={saving}
       />
       {/* Submit button */}
       <Button
-        text={sent ? 'Sent to Topcoder' : 'Send to Topcoder'}
+        text={sent ? 'Edit Challenge' : 'Send to Topcoder'}
         className={classes.sendButton}
         primary={true}
+        disabled={(sent && !isEdited) || saving}
         onClick={handleSendButtonClick}
-        disabled={sent}
       />
+      {sent && <Button
+        text='Discard Changes'
+        className={classes.sendButton}
+        primary={false}
+        disabled={!isEdited || saving}
+        onClick={handleDiscardButtonClicked}
+      />}
     </div>
   );
 }
