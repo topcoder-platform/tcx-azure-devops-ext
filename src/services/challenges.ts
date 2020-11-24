@@ -1,5 +1,8 @@
 import qs from 'qs';
 import assign from 'lodash/assign';
+import omitBy from 'lodash/omitBy';
+import isNil from 'lodash/isNil';
+import pick from 'lodash/pick';
 
 import { axiosInstance } from './axiosWithAuth';
 import {
@@ -20,11 +23,12 @@ export function fetchChallenges(params: any = {}) {
 }
 
 /**
- * Creates a TC Challenge
+ * Creates or Update a TC Challenge
  * @param challenge TC Challenge Properties
  */
-export function createChallenge(challenge: any) {
-  const body = assign({}, NEW_CHALLENGE_TEMPLATE, {
+export function createOrUpdateChallenge(challenge: any) {
+  const isUpdate = /[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}/i.test(challenge.challengeId);
+  const body = omitBy(assign({}, NEW_CHALLENGE_TEMPLATE, {
     typeId: TYPE_ID_TASK,
     name: challenge.name,
     privateDescription: challenge.privateDescription,
@@ -33,17 +37,19 @@ export function createChallenge(challenge: any) {
       type: 'placement',
       prizes: [{type: 'USD', value: challenge.prize}]
     }],
-    legacy: {
-      ...(NEW_CHALLENGE_TEMPLATE.legacy || {}),
-      directProjectId: challenge.directProjectId
-    },
     startDate: new Date().toISOString(),
     timelineTemplateId: DEFAULT_TIMELINE_TEMPLATE_ID,
     projectId: challenge.projectId,
     trackId: DEFAULT_TRACK_ID
-  });
-
-  return axiosInstance.post(`${CHALLENGE_API_URL}`, body);
+  }), isNil);
+  if (isUpdate) {
+    return axiosInstance.patch(
+      `${CHALLENGE_API_URL}/${challenge.challengeId}`,
+      pick(body, ['name', 'description', 'privateDescription', 'prizeSets'])
+    );
+  } else {
+    return axiosInstance.post(`${CHALLENGE_API_URL}`, body);
+  }
 }
 
 /**

@@ -1,5 +1,5 @@
 import React from 'react';
-import { createChallenge } from '../services/challenges';
+import { createOrUpdateChallenge } from '../services/challenges';
 import { WEBSITE } from '../config';
 
 export default function ActionsTopcoderController() {
@@ -14,8 +14,7 @@ export default function ActionsTopcoderController() {
     const createTopcoderChallenge = (
       id: string,
       title: string,
-      body: string,
-      tags: any = null
+      body: string
     ) => {
       (async function run() {
         let isProcessed = false;
@@ -23,7 +22,7 @@ export default function ActionsTopcoderController() {
         const projectId = await dataService.getValue(VSS.getWebContext().project.id + '_TOPCODER_PROJECT', {scopeType: 'User'});
         if (projectId) {
           var bodyWithRef = body + '\n\n### Reference ' + buildWorkItemUrl(id);
-          const res = await createChallenge({
+          const res = await createOrUpdateChallenge({
             name: title,
             detailedRequirements: bodyWithRef,
             projectId,
@@ -59,7 +58,7 @@ export default function ActionsTopcoderController() {
                     alert('Unable to send unsaved work items. Please save it first.');
                   }
                   else {
-                    createTopcoderChallenge(value["System.Id"], value["System.Title"], value["System.Description"], value["System.Tags"]);
+                    createTopcoderChallenge(value["System.Id"], value["System.Title"], value["System.Description"]);
                   }
               });
             });
