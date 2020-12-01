@@ -15,16 +15,18 @@ import TableRow from '@material-ui/core/TableRow';
 import TableSortLabel from '@material-ui/core/TableSortLabel';
 import Paper from '@material-ui/core/Paper';
 import get from 'lodash/get';
+import find from 'lodash/find';
 import { fetchChallenges } from '../services/challenges';
 import { challengeUrl } from '../utils/url-utils';
 import { formatDate } from '../utils/date-utils';
+import { ConditionalChildren } from 'azure-devops-ui/ConditionalChildren';
 
 const headCells = [
-  { id: 'type', numeric: false, disablePadding: false, label: 'Type', allowSorting: false },
-  { id: 'name', numeric: false, disablePadding: false, label: 'Title', allowSorting: true },
-  { id: 'startDate', numeric: false, disablePadding: false, label: 'Start Date', allowSorting: true },
-  { id: 'endDate', numeric: false, disablePadding: false, label: 'End Date', allowSorting: true },
-  { id: 'phases', numeric: false, disablePadding: false, label: 'State', allowSorting: false },
+  { id: 'type', numeric: false, disablePadding: false, label: 'Type', allowSorting: false, hidden: false },
+  { id: 'name', numeric: false, disablePadding: false, label: 'Title', allowSorting: true, hidden: false },
+  { id: 'startDate', numeric: false, disablePadding: false, label: 'Start Date', allowSorting: true, hidden: false },
+  { id: 'endDate', numeric: false, disablePadding: false, label: 'End Date', allowSorting: true, hidden: false },
+  { id: 'phases', numeric: false, disablePadding: false, label: 'State', allowSorting: false, hidden: false },
 ];
 
 function EnhancedTableHead(props: any) {
@@ -36,7 +38,7 @@ function EnhancedTableHead(props: any) {
   return (
     <TableHead>
       <TableRow>
-        {headCells.map((headCell) => (
+        {headCells.filter(headCell => !headCell.hidden).map((headCell) => (
           <TableCell
             key={headCell.id}
             align={headCell.numeric ? 'right' : 'left'}
@@ -139,6 +141,8 @@ function ChallengeTable(props: any) {
           }
           return row;
         }));
+        const hidePhasesColumn = (props.status !== 'Active');
+        find(headCells, { id: 'phases' })!.hidden = hidePhasesColumn;
         setPageCount(+get(res, 'headers.x-total', res.data.length));
         const resPage = +get(res, 'headers.x-page');
         if (resPage !== page + 1) {
@@ -216,13 +220,25 @@ function ChallengeTable(props: any) {
                     onClick={(event) => handleClick(event, row.name)}
                     tabIndex={-1}
                     children={<>
-                      <TableCell component="th" id={labelId} scope="row" className={classes.type}>{row.type}</TableCell>
-                      <TableCell align="left" className={classes.name}>
-                        <a href={challengeUrl(row.id)} target="_blank">{row.name}</a> {/* eslint-disable-line react/jsx-no-target-blank */}
-                      </TableCell>
-                      <TableCell align="left">{formatDate(row.startDate)}</TableCell>
-                      <TableCell align="left">{formatDate(row.endDate)}</TableCell>
-                      <TableCell align="left">{row.phases}</TableCell>
+                      <ConditionalChildren renderChildren={!headCells[0].hidden}>
+                        <TableCell component="th" id={labelId} scope="row" className={classes.type}>
+                          {row.type}
+                        </TableCell>
+                      </ConditionalChildren>
+                      <ConditionalChildren renderChildren={!headCells[1].hidden}>
+                        <TableCell align="left" className={classes.name}>
+                          <a href={challengeUrl(row.id)} target="_blank" rel="noopener noreferrer">{row.name}</a>
+                        </TableCell>
+                      </ConditionalChildren>
+                      <ConditionalChildren renderChildren={!headCells[2].hidden}>
+                        <TableCell align="left">{formatDate(row.startDate)}</TableCell>
+                      </ConditionalChildren>
+                      <ConditionalChildren renderChildren={!headCells[3].hidden}>
+                        <TableCell align="left">{formatDate(row.endDate)}</TableCell>
+                      </ConditionalChildren>
+                      <ConditionalChildren renderChildren={!headCells[4].hidden}>
+                        <TableCell align="left">{row.phases}</TableCell>
+                      </ConditionalChildren>
                     </>}
                     hover={true}
                   />
