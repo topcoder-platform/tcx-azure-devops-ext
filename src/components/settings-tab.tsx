@@ -29,75 +29,72 @@ export default function SettingsTab() {
   const [repo, setRepo] = React.useState('');
   const [repos, setRepos] = React.useState<any[]>([]);
 
-  const fetchRepos = (token: string) => {
-    const github = new GitHub({
-      token
-    });
-    github.getUser().listRepos().then((res: any) => {
-      setRepos(res.data);
-      VSS.getService(VSS.ServiceIds.ExtensionData).then((dataService: any) => {
-        dataService.getValue(VSS.getWebContext().project.id + '_GITHUB_REPO', {scopeType: 'User'}).then((githubRepo: string) => {
-          setRepo(githubRepo);
-        });
-      });
-    });
+  const fetchRepos = async (token: string) => {
+    const github = new GitHub({ token });
+    const res: any = await github.getUser().listRepos();
+    setRepos(res.data);
+    const dataService: any = await VSS.getService(VSS.ServiceIds.ExtensionData);
+    const githubRepo: string = await dataService.getValue(VSS.getWebContext().project.id + '_GITHUB_REPO', {scopeType: 'User'});
+    setRepo(githubRepo);
   };
 
   React.useEffect(() => {
-    VSS.getService(VSS.ServiceIds.ExtensionData).then((dataService: any) => {
-      dataService.getValue(VSS.getWebContext().project.id + '_GITHUB_TOKEN', {scopeType: 'User'}).then((githubToken: string) => {
-        setToken(githubToken);
-        if (githubToken) {
-          fetchRepos(githubToken);
-        }
-      });
-    });
+    (async () => {
+      const dataService: any = await VSS.getService(VSS.ServiceIds.ExtensionData);
+      const githubToken: string = await dataService.getValue(VSS.getWebContext().project.id + '_GITHUB_TOKEN', {scopeType: 'User'});
+      setToken(githubToken);
+      if (githubToken) {
+        fetchRepos(githubToken);
+      }
+    })();
   }, []);
 
-  const handleSaveButtonClick = () => {
-    VSS.getService(VSS.ServiceIds.ExtensionData).then((dataService: any) => {
-      dataService.setValue(VSS.getWebContext().project.id + '_GITHUB_TOKEN', token, {scopeType: 'User'});
-    });
+  const handleSaveButtonClick = async () => {
+    const dataService: any = await VSS.getService(VSS.ServiceIds.ExtensionData);
+    dataService.setValue(VSS.getWebContext().project.id + '_GITHUB_TOKEN', token, {scopeType: 'User'});
     fetchRepos(token);
   };
-  const handleRepoSelected = (event: any) => {
+
+  const handleRepoSelected = async (event: any) => {
     setRepo(event.target.value);
-    VSS.getService(VSS.ServiceIds.ExtensionData).then((dataService: any) => {
-      dataService.setValue(VSS.getWebContext().project.id + '_GITHUB_REPO', event.target.value, {scopeType: 'User'});
-    });
+    const dataService: any = await VSS.getService(VSS.ServiceIds.ExtensionData);
+    dataService.setValue(VSS.getWebContext().project.id + '_GITHUB_REPO', event.target.value, {scopeType: 'User'});
   };
 
   return (
     <div className={classes.root}>
       <div>
-        <TextField id="filled-basic" label="Github Token" variant="filled" value={token} className={classes.text} onChange={
-          e => {
+        <TextField
+          id="filled-basic"
+          label="Github Token"
+          variant="filled"
+          value={token}
+          className={classes.text}
+          onChange={e => {
             setToken(e.target.value);
-          }
-        }/>
+          }}
+        />
       </div>
       <div>
         <Button
           variant="contained"
           color="primary"
           onClick={handleSaveButtonClick}
-        >
-          Save
-        </Button>
+          children={'Save'}
+        />
       </div>
       <div>
         <FormControl variant="filled" className={classes.formControl}>
-          <InputLabel id="demo-simple-select-filled-label">Select Repository</InputLabel>
+          <InputLabel>Select Repository</InputLabel>
           <Select
-            labelId="demo-simple-select-filled-label"
-            id="demo-simple-select-filled"
             value={repo}
             onChange={handleRepoSelected}
-          >
-          {repos.map((row) => (
-            <MenuItem value={row.full_name}>{row.full_name}</MenuItem>
-          ))}
-          </Select>
+            children={
+              repos.map((row) => (
+                <MenuItem value={row.full_name}>{row.full_name}</MenuItem>
+              ))
+            }
+          />
         </FormControl>
       </div>
     </div>

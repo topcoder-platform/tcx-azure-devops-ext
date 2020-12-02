@@ -276,7 +276,7 @@ export default function WITFormPage() {
       alert('Please fill the prize field.');
       return;
     }
-    if (!projectId) {
+    if (!projectId || projectId <= 0) {
       alert('Please select a project.');
       return;
     }
