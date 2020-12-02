@@ -33,7 +33,7 @@ const useStyles = makeStyles((theme) => ({
     color: 'black',
     lineHeight: '22px',
     fontSize: '14px',
-    fontWeight: '500',
+    fontWeight: 500,
     verticalAlign: 'middle',
     width: '100%'
   },
@@ -68,7 +68,7 @@ export default function WITFormGroup() {
         return;
       }
       // Get Extension Data service
-      const dataService = await VSS.getService(VSS.ServiceIds.ExtensionData);
+      const dataService: any = await VSS.getService(VSS.ServiceIds.ExtensionData);
       // Project ID is used as prefix in all field keys, store it as constant
       const ctxProjectId = VSS.getWebContext().project.id;
       // Get values for challenge ID and legacy ID fields.
@@ -104,17 +104,17 @@ export default function WITFormGroup() {
   }, [id]);
 
   React.useEffect(() => {
-    VSS.require(["TFS/WorkItemTracking/Services"], function (_WorkItemServices) {
+    VSS.require(["TFS/WorkItemTracking/Services"], function (_WorkItemServices: any) {
       VSS.register("tcx-wit-form-group", function () {
         return {
           onFieldChanged: () => {},
-          onLoaded: function (args) {
+          onLoaded: function (args: any) {
             if (args.id) {
               setId(args.id);
             }
           },
           onUnloaded: () => {},
-          onSaved: (args) => setId(args.id),
+          onSaved: (args: any) => setId(args.id),
           onReset: () => {},
           onRefreshed: () => {}
         };

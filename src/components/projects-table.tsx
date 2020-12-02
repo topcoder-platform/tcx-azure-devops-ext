@@ -1,5 +1,5 @@
 /**
- * Create view for showing the challenge list on hub and widget.
+ * Create view for showing the project list.
  */
 
 import React from 'react';
@@ -14,11 +14,11 @@ import TablePagination from '@material-ui/core/TablePagination';
 import TableRow from '@material-ui/core/TableRow';
 import TableSortLabel from '@material-ui/core/TableSortLabel';
 import Paper from '@material-ui/core/Paper';
-import { fetchChallenges } from '../services/challenges';
-import { challengeUrl } from '../utils/url-utils';
+import { fetchMemberProjects } from '../services/projects';
 import { formatDate } from '../utils/date-utils';
+import { directUrl, connectUrl } from '../utils/url-utils';
 
-function descendingComparator(a, b, orderBy) {
+function descendingComparator(a: any, b: any, orderBy: string) {
   if (b[orderBy] < a[orderBy]) {
     return -1;
   }
@@ -28,13 +28,13 @@ function descendingComparator(a, b, orderBy) {
   return 0;
 }
 
-function getComparator(order, orderBy) {
+function getComparator(order: string, orderBy: string) {
   return order === 'desc'
-    ? (a, b) => descendingComparator(a, b, orderBy)
-    : (a, b) => -descendingComparator(a, b, orderBy);
+    ? (a: any, b: any) => descendingComparator(a, b, orderBy)
+    : (a: any, b: any) => -descendingComparator(a, b, orderBy);
 }
 
-function stableSort(array, comparator) {
+function stableSort(array: any[], comparator: (...args: any) => any) {
   const stabilizedThis = array.map((el, index) => [el, index]);
   stabilizedThis.sort((a, b) => {
     const order = comparator(a[0], b[0]);
@@ -45,16 +45,15 @@ function stableSort(array, comparator) {
 }
 
 const headCells = [
-  { id: 'type', numeric: false, disablePadding: false, label: 'Type' },
   { id: 'name', numeric: false, disablePadding: false, label: 'Title' },
-  { id: 'startDate', numeric: false, disablePadding: false, label: 'Start Date' },
-  { id: 'endDate', numeric: false, disablePadding: false, label: 'End Date' },
-  { id: 'phases', numeric: false, disablePadding: false, label: 'State' },
+  { id: 'status', numeric: false, disablePadding: false, label: 'Status' },
+  { id: 'lastActivityAt', numeric: false, disablePadding: false, label: 'Last Update' },
+  { id: 'directProjectId', numeric: false, disablePadding: false, label: 'Direct Project Id' },
 ];
 
-function EnhancedTableHead(props) {
+function EnhancedTableHead(props: any) {
   const { classes, order, orderBy, onRequestSort } = props;
-  const createSortHandler = (property) => (event) => {
+  const createSortHandler = (property: any) => (event: any) => {
     onRequestSort(event, property);
   };
 
@@ -91,7 +90,7 @@ EnhancedTableHead.propTypes = {
   classes: PropTypes.object.isRequired,
   numSelected: PropTypes.number.isRequired,
   onRequestSort: PropTypes.func.isRequired,
-  onSelectAllClick: PropTypes.func.isRequired,
+  onSelectAllClick: PropTypes.func,
   order: PropTypes.oneOf(['asc', 'desc']).isRequired,
   orderBy: PropTypes.string.isRequired,
   rowCount: PropTypes.number.isRequired,
@@ -127,47 +126,42 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-function ChallengeTable(props) {
+function ProjectsTable() {
   const classes = useStyles();
   const [order, setOrder] = React.useState('asc');
-  const [orderBy, setOrderBy] = React.useState('calories');
-  const [selected, setSelected] = React.useState([]);
+  const [orderBy, setOrderBy] = React.useState('');
+  const [selected, setSelected] = React.useState<any[]>([]);
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
   const [data, setData] = React.useState([]);
 
   React.useEffect(() => {
     const filters = {
-      sortBy: 'updated',
-      sortOrder: 'desc'
+      sort: 'lastActivityAt desc',
+      memberOnly: false
     };
-    filters['status'] = props.status;
-    fetchChallenges(filters, {
-      page: 1,
-      perPage: 50
-    }).then((res) => {
-      setData(res.data.map((row) => {
-        if (row.currentPhaseNames) {
-          row.phases = row.currentPhaseNames.join(', ');
-        }
-        return row;
-      }));
-      console.log(JSON.stringify(res.data));
-    }).catch((e) => {
-      console.error(e);
-      alert('Failed to fetch chellenges. ' + e.message);
-    });
-  }, [props.status]);
 
-  const handleRequestSort = (event, property) => {
+    fetchMemberProjects(filters)
+      .then(projects => {
+        console.log(projects);
+
+        setData(projects);
+      })
+      .catch((e) => {
+        console.error(e);
+        alert('Failed to fetch projects. ' + e.message);
+    });
+  }, []);
+
+  const handleRequestSort = (event: any, property: string) => {
     const isAsc = orderBy === property && order === 'asc';
     setOrder(isAsc ? 'desc' : 'asc');
     setOrderBy(property);
   };
 
-  const handleClick = (event, name) => {
+  const handleClick = (event: any, name: string) => {
     const selectedIndex = selected.indexOf(name);
-    let newSelected = [];
+    let newSelected: any[] = [];
 
     if (selectedIndex === -1) {
       newSelected = newSelected.concat(selected, name);
@@ -185,11 +179,11 @@ function ChallengeTable(props) {
     setSelected(newSelected);
   };
 
-  const handleChangePage = (event, newPage) => {
+  const handleChangePage = (event: any, newPage: number) => {
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (event) => {
+  const handleChangeRowsPerPage = (event: any) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
@@ -215,21 +209,22 @@ function ChallengeTable(props) {
             <TableBody>
               {stableSort(data, getComparator(order, orderBy))
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((row, index) => {
-                  const labelId = `enhanced-table-checkbox-${index}`;
+                .map((row) => {
                   return (
-                  <TableRow // eslint-disable-line react/jsx-key
+                    <TableRow // eslint-disable-line react/jsx-key
                       hover
                       onClick={(event) => handleClick(event, row.name)}
                       tabIndex={-1}
+                      // key={row.name}
                     >
-                      <TableCell component="th" id={labelId} scope="row" className={classes.type}>{row.type}</TableCell>
                       <TableCell align="left" className={classes.name}>
-                        <a href={challengeUrl(row.id)} target="_blank">{row.name}</a> {/* eslint-disable-line react/jsx-no-target-blank */}
+                        <a href={connectUrl(row.id)} target="_blank">{row.name}</a> {/* eslint-disable-line react/jsx-no-target-blank */}
                       </TableCell>
-                      <TableCell align="left">{formatDate(row.startDate)}</TableCell>
-                      <TableCell align="left">{formatDate(row.endDate)}</TableCell>
-                      <TableCell align="left">{row.phases}</TableCell>
+                      <TableCell align="left">{row.status}</TableCell>
+                      <TableCell align="left">{formatDate(row.lastActivityAt)}</TableCell>
+                      <TableCell align="left">
+                        <a href={directUrl(row.directProjectId)} target="_blank">{row.directProjectId}</a> {/* eslint-disable-line react/jsx-no-target-blank */}
+                      </TableCell>
                     </TableRow>
                   );
                 })}
@@ -250,8 +245,4 @@ function ChallengeTable(props) {
   );
 }
 
-ChallengeTable.propTypes = {
-  status: PropTypes.string.isRequired
-};
-
-export default ChallengeTable;
+export default ProjectsTable;
