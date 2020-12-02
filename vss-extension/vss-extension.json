@@ -91,9 +91,6 @@
                 "ms.vss-work-web.backlog-item-menu"
             ],
             "properties": {
-                "text": "Send to Topcoder",
-                "title": "Send to Topcoder",
-                "groupId": "actions",
                 "uri": "index.html?context=actions-send-topcoder"
             }
         },

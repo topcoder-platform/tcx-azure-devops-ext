@@ -12,8 +12,11 @@ import AccountIcon from '@material-ui/icons/Person';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import FormHelperText from '@material-ui/core/FormHelperText';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
+import Checkbox from '@material-ui/core/Checkbox';
+import { ConditionalChildren } from 'azure-devops-ui/ConditionalChildren';
 
 import { poll } from '../utils/token-poll';
 import { getDeviceAuthentication, getDeviceToken } from '../services/account';
@@ -58,7 +61,7 @@ const useStyles = makeStyles((theme) => ({
     marginTop: theme.spacing(2),
   },
   menu: {
-    height: 200
+    height: 350
   }
 }));
 
@@ -68,6 +71,7 @@ export default function AccountTab() {
   const [loggedIn, setLoggedIn] = React.useState(false);
   const [projects, setProjects] = React.useState<any[]>([]);
   const [projectId, setProjectId] = React.useState('');
+  const [enableMenuItems, _setEnableMenuItems] = React.useState(true);
 
   const buttonClassname = clsx({
     [classes.buttonSuccess]: loggedIn,
@@ -76,12 +80,12 @@ export default function AccountTab() {
   const getProjects = async () => {
     const filters = {
       sort: 'lastActivityAt desc',
-      memberOnly: false
+      memberOnly: true,
+      status: 'active'
     };
 
     const projects = await fetchMemberProjects(filters);
     try {
-        console.log(projects);
         setProjects(projects);
         const dataService: any = await VSS.getService(VSS.ServiceIds.ExtensionData);
         const topcoderProjectId = await dataService.getValue(VSS.getWebContext().project.id + '_TOPCODER_PROJECT', {scopeType: 'User'});
@@ -106,6 +110,8 @@ export default function AccountTab() {
     VSS.getService(VSS.ServiceIds.ExtensionData).then(async function (dataService: any) {
       // Get value in user scope
       const value = await dataService.getValue('access-token', {scopeType: 'User'});
+      const enableMenuItems = await dataService.getValue(VSS.getWebContext().project.id + '_ENABLE_MENU_ITEMS', {scopeType: 'User'});
+      setEnableMenuItems(enableMenuItems);
         console.log('User scoped key value is ' + value);
         if (value) {
           setLoggedIn(true);
@@ -113,6 +119,12 @@ export default function AccountTab() {
         }
     });
   }, []);
+
+  const setEnableMenuItems = async (value: boolean) => {
+    _setEnableMenuItems(value);
+    const dataService: any = await VSS.getService(VSS.ServiceIds.ExtensionData);
+    dataService.setValue(VSS.getWebContext().project.id + '_ENABLE_MENU_ITEMS', value, {scopeType: 'User'});
+  };
 
   const handleButtonClick = async () => {
     if (!loading) {
@@ -151,50 +163,55 @@ export default function AccountTab() {
     }
   };
 
-  return (
-    <div>
-      <div className={classes.root}>
-        <div className={classes.wrapper}>
-          <Fab
-            aria-label="save"
-            color="primary"
-            className={buttonClassname}
-            // disabled={loggedIn}
-            onClick={handleButtonClick}
-          >
-            {loading || !loggedIn ? <AccountIcon /> : <CheckIcon />}
-          </Fab>
-          {loading && <CircularProgress size={68} className={classes.fabProgress} />}
-        </div>
-        <div className={classes.wrapper}>
-          <Button
-            variant="contained"
-            color="primary"
-            className={buttonClassname}
-            // disabled={loading || loggedIn}
-            onClick={handleButtonClick}
-          >
-            {loading ? 'Waiting for authentication' : loggedIn ? 'Logged In.': 'Login'}
-          </Button>
-        </div>
+  return (<>
+    <div className={classes.root}>
+      <div className={classes.wrapper}>
+        <Fab
+          aria-label="save"
+          color="primary"
+          className={buttonClassname}
+          // disabled={loggedIn}
+          onClick={handleButtonClick}
+        >
+          {loading || !loggedIn ? <AccountIcon /> : <CheckIcon />}
+        </Fab>
+        {loading && <CircularProgress size={68} className={classes.fabProgress} />}
       </div>
-      <div>
-          <FormControl className={classes.formControl}>
-          <InputLabel id="demo-simple-select-helper-label">Select Project</InputLabel>
-          <Select
-            MenuProps={{ className: classes.menu }}
-            labelId="demo-simple-select-helper-label"
-            id="demo-simple-select-helper"
-            value={projectId}
-            onChange={handleProjectIdChange}
-          >
-              {sortBy(projects, ['name']).map((row, idx) =>
-                  <MenuItem key={idx} value={row.id}>{row.name}</MenuItem>
-              )}
-            </Select>
-            <FormHelperText>Please select a project</FormHelperText>
-          </FormControl>
-        </div>
+      <div className={classes.wrapper}>
+        <Button
+          variant="contained"
+          color="primary"
+          className={buttonClassname}
+          // disabled={loading || loggedIn}
+          onClick={handleButtonClick}
+        >
+          {loading ? 'Waiting for authentication' : loggedIn ? 'Logged In.': 'Login'}
+        </Button>
+      </div>
     </div>
-  );
+    <div style={{ paddingTop: 32, paddingLeft: 8 }}>
+      <FormControlLabel
+        control={<Checkbox checked={enableMenuItems} onChange={(_, value) => setEnableMenuItems(value)} />}
+        label='Enable "Send to Topcoder" Menu Item'
+      />
+    </div>
+    <ConditionalChildren renderChildren={enableMenuItems}>
+      <FormControl className={classes.formControl}>
+        <InputLabel id="select-project-label">Select Project</InputLabel>
+        <Select
+          MenuProps={{ className: classes.menu }}
+          labelId="select-project-label"
+          id="select-project"
+          value={projectId}
+          onChange={handleProjectIdChange}
+          children={
+            sortBy(projects, ['name']).map((row, idx) =>
+              <MenuItem key={idx} value={row.id}>{row.name}</MenuItem>
+            )
+          }
+        />
+        <FormHelperText>Please select a project</FormHelperText>
+      </FormControl>
+    </ConditionalChildren>
+  </>);
 }
