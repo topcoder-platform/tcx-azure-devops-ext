@@ -9,45 +9,40 @@ import {
 
 /**
  * Generate direct url for given direct project id
- * @param {string} directProjectId
- * @return {string}
+ * @param directProjectId
  */
-export function directUrl(directProjectId) {
+export function directUrl(directProjectId: string) {
   return `${WEBSITE}/direct/projectOverview.action?formData.projectId=${directProjectId}`;
 }
 
 /**
  * Generate connect url for given project id
- * @param {string} id
- * @return {string}
+ * @param id
  */
-export function connectUrl(id) {
+export function connectUrl(id: string) {
   return `${WEBSITE_CONNECT}/projects/${id}`;
 }
 
 /**
  * Generate challenge url for given challenge id
- * @param {string} id string
- * @return {string}
+ * @param id
  */
-export function challengeUrl(id) {
+export function challengeUrl(id: string) {
   return `${WEBSITE}/challenges/${id}`;
 }
 
 /**
  * Generate OR link for given challenge id
- * @param {string} id
- * @return {string}
+ * @param id
  */
-export function onlineReviewUrl(legacyChallengeId) {
+export function onlineReviewUrl(legacyChallengeId: string) {
   return template(CHALLENGE_ONLINE_REVIEW_LINK_TEMPLATE)({ legacyChallengeId });
 }
 
 /**
  * Generates url to challenge in TC Direct for given legacy challenge id
- * @param {string} legacyChallengeId
- * @return {string}
+ * @param legacyChallengeId
  */
-export function challengeDirectUrl(legacyChallengeId) {
+export function challengeDirectUrl(legacyChallengeId: string) {
   return template(CHALLENGE_DIRECT_LINK_TEMPLATE)({ legacyChallengeId });
 }

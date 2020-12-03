@@ -13,7 +13,7 @@ import { getRefreshedDeviceToken } from './account';
  * If the token doesn't exist, throws an error.
  */
 export async function getToken() {
-    const dataService = await VSS.getService(VSS.ServiceIds.ExtensionData);
+    const dataService: any = await VSS.getService(VSS.ServiceIds.ExtensionData);
     let accessToken;
     try {
       accessToken = await dataService.getValue('access-token', {scopeType: 'User'});
@@ -37,7 +37,7 @@ export async function getToken() {
 }
 
 export async function refreshToken() {
-  const dataService = await VSS.getService(VSS.ServiceIds.ExtensionData);
+  const dataService: any = await VSS.getService(VSS.ServiceIds.ExtensionData);
   try {
     const refreshToken = await dataService.getValue('refresh-token', {scopeType: 'User'});
     if (!refreshToken) {
@@ -58,7 +58,7 @@ export async function refreshToken() {
   }
 }
 
-function urlBase64Decode(str) {
+function urlBase64Decode(str: string) {
   let output = str.replace(/-/g, '+').replace(/_/g, '/');
 
   switch (output.length % 4) {
@@ -79,7 +79,7 @@ function urlBase64Decode(str) {
   return decodeURIComponent(escape(atob(output))); //polyfill https://github.com/davidchambers/Base64.js
 }
 
-export function decodeToken(token) {
+export function decodeToken(token: string) {
   const parts = token.split('.');
   if (parts.length !== 3) {
     throw new Error('The token is invalid');
@@ -91,7 +91,7 @@ export function decodeToken(token) {
   return JSON.parse(decoded);
 }
 
-function getTokenExpirationDate(token) {
+function getTokenExpirationDate(token: string) {
   const decoded = decodeToken(token);
   if(typeof decoded.exp === 'undefined') {
     return null;
@@ -101,7 +101,7 @@ function getTokenExpirationDate(token) {
   return d;
 }
 
-function isTokenExpired(token, offsetSeconds = 0) {
+function isTokenExpired(token: string, offsetSeconds: number = 0) {
   const d = getTokenExpirationDate(token);
   if (d === null) {
     return false;

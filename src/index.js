@@ -7,6 +7,19 @@ import "azure-devops-ui/Core/override.css";
 import App from './App';
 import * as serviceWorker from './serviceWorker';
 
+// Polyfill for Edge (Text Encoder/Text Decoder)
+(async function () {
+  if (!window['TextEncoder']) {
+    const { TextEncoder } = await import('text-encoding')
+    window.TextEncoder = TextEncoder;
+  }
+
+  if (!window['TextDecoder']) {
+    const { TextDecoder } = await import('text-encoding')
+    window.TextDecoder = TextDecoder;
+  }
+})();
+
 VSS.init({
   explicitNotifyLoaded: true
 });
