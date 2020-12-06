@@ -272,7 +272,7 @@ export default function WITFormPage() {
       alert('Unable to send unsaved work items. Please save it first.');
       return;
     }
-    if (!projectId) {
+    if (!projectId || projectId <= 0) {
       alert('Please select a project.');
       return;
     }

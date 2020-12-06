@@ -1,8 +1,8 @@
 {
     "manifestVersion": 1,
     "id": "topcoder-x",
-    "publisher": "Topcoder",
-    "version": "1.0.75",
+    "publisher": "JustinGasperTopcodertest",
+    "version": "1.0.77",
     "name": "Topcoder X",
     "description": "Topcoder X is an application used by copilots to manage direct tasks.",
     "public": false,
@@ -103,9 +103,6 @@
                 "ms.vss-work-web.backlog-item-menu"
             ],
             "properties": {
-                "text": "Send to Topcoder",
-                "title": "Send to Topcoder",
-                "groupId": "actions",
                 "uri": "index.html?context=actions-send-topcoder"
             }
         },
