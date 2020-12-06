@@ -272,10 +272,6 @@ export default function WITFormPage() {
       alert('Unable to send unsaved work items. Please save it first.');
       return;
     }
-    if (!prize) {
-      alert('Please fill the prize field.');
-      return;
-    }
     if (!projectId) {
       alert('Please select a project.');
       return;
@@ -287,7 +283,7 @@ export default function WITFormPage() {
       title,
       body: description,
       privateDescription,
-      prize: parseInt(prize),
+      prize: prize ? parseInt(prize) : 0,
       projectId
     });
   };
@@ -361,7 +357,7 @@ export default function WITFormPage() {
       />
       {/* Prize text field */}
       <TextField
-        label="Prize"
+        label="Prize (Optional)"
         value={prize}
         className={classes.formControl}
         onChange={event => setPrize(event.target.value)}
