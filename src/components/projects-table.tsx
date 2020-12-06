@@ -105,7 +105,7 @@ const useStyles = makeStyles((theme) => ({
     marginBottom: theme.spacing(2),
   },
   table: {
-    minWidth: 750,
+    minWidth: 500,
   },
   name: {
     width: 300
