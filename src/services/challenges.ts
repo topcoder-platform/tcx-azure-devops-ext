@@ -1,5 +1,6 @@
 import qs from 'qs';
 import assign from 'lodash/assign';
+import omit from 'lodash/omit';
 import omitBy from 'lodash/omitBy';
 import isNil from 'lodash/isNil';
 import pick from 'lodash/pick';
@@ -48,7 +49,7 @@ export function createOrUpdateChallenge(challenge: any) {
       pick(body, ['name', 'description', 'privateDescription', 'prizeSets'])
     );
   } else {
-    return axiosInstance.post(`${CHALLENGE_API_URL}`, body);
+    return axiosInstance.post(`${CHALLENGE_API_URL}`, challenge.prize ? body : omit(body, ['prizeSets']));
   }
 }
 
