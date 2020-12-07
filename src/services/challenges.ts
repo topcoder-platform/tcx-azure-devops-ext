@@ -29,7 +29,7 @@ export function fetchChallenges(params: any = {}) {
  */
 export function createOrUpdateChallenge(challenge: any) {
   const isUpdate = /[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}/i.test(challenge.challengeId);
-  const body = omitBy(assign({}, NEW_CHALLENGE_TEMPLATE, {
+  let body = omitBy(assign({}, NEW_CHALLENGE_TEMPLATE, {
     typeId: TYPE_ID_TASK,
     name: challenge.name,
     privateDescription: challenge.privateDescription,
@@ -43,13 +43,19 @@ export function createOrUpdateChallenge(challenge: any) {
     projectId: challenge.projectId,
     trackId: DEFAULT_TRACK_ID
   }), isNil);
+  if (!challenge.prize) {
+    body = omit(body, ['prizeSets']);
+  }
+  if (!challenge.privateDescription) {
+    body = omit(body, ['privateDescription']);
+  }
   if (isUpdate) {
     return axiosInstance.patch(
       `${CHALLENGE_API_URL}/${challenge.challengeId}`,
       pick(body, ['name', 'description', 'privateDescription', 'prizeSets'])
     );
   } else {
-    return axiosInstance.post(`${CHALLENGE_API_URL}`, challenge.prize ? body : omit(body, ['prizeSets']));
+    return axiosInstance.post(`${CHALLENGE_API_URL}`, body);
   }
 }
 

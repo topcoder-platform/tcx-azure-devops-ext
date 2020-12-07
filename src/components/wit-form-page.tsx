@@ -347,7 +347,7 @@ export default function WITFormPage() {
       />
       {/* Private Specifications text field */}
       <TextField
-        label="Private Specification"
+        label="Private Specification (Optional)"
         multiline
         rows={6}
         value={privateDescription}
