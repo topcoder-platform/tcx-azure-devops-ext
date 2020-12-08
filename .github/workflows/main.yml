@@ -52,6 +52,15 @@ jobs:
           git push
       - name: Publish to marketplace (Prod)
         if: github.ref == 'refs/heads/master'
+        env:
+          NODE_ENV: ${{ secrets.PROD_NODE_ENV }}
+          REACT_APP_DOMAIN: ${{ secrets.PROD_REACT_APP_DOMAIN }}
+          REACT_APP_HOST_URL: ${{ secrets.PROD_REACT_APP_HOST_URL }}
+          REACT_APP_AUTH0_URL: ${{ secrets.PROD_REACT_APP_AUTH0_URL }}
+          REACT_APP_AUTH0_CLIENT_ID: ${{ secrets.PROD_REACT_APP_AUTH0_CLIENT_ID }}
+          REACT_APP_AUTH0_SCOPE: ${{ secrets.REACT_APP_AUTH0_SCOPE }}
+          REACT_AUTH0_AUDIENCE: ${{ secrets.PROD_REACT_AUTH0_AUDIENCE }}
+          GITHUB_CLIENT_ID: ${{ secrets.PROD_GITHUB_CLIENT_ID }}
         run: |
           npm i -g tfx-cli
           npm install
