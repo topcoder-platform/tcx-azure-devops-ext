@@ -52,8 +52,8 @@ export const NEW_CHALLENGE_TEMPLATE = process.env.REACT_APP_NEW_CHALLENGE_TEMPLA
   status: 'Draft',
   terms: [
 		{
-			id: "64d6e249-d7a5-4591-8ff5-e872f8a051f9",
-			roleId: "732339e7-8e30-49d7-9198-cccf9451e221"
+      id: process.env.DEFAULT_TERMS_ID || "64d6e249-d7a5-4591-8ff5-e872f8a051f9",
+      roleId: process.env.DEFAULT_ROLE_ID || "732339e7-8e30-49d7-9198-cccf9451e221"
 		}
 	],
 };

@@ -1,6 +1,6 @@
 {
   "name": "topcoder-x",
-  "version": "1.0.79",
+  "version": "1.0.81",
   "private": true,
   "homepage": "./",
   "dependencies": {
