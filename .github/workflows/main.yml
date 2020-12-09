@@ -62,7 +62,7 @@ jobs:
           REACT_AUTH0_AUDIENCE: ${{ secrets.PROD_REACT_AUTH0_AUDIENCE }}
           GITHUB_CLIENT_ID: ${{ secrets.PROD_GITHUB_CLIENT_ID }}
           DEFAULT_TERMS_ID: ${{ secrets.PROD_DEFAULT_TERMS_ID }}
-          DEFAULT_ROLE_ID: ${{ secretes.PROD_DEFAULT_ROLE_ID }}
+          DEFAULT_ROLE_ID: ${{ secrets.PROD_DEFAULT_ROLE_ID }}
         run: |
           npm i -g tfx-cli
           npm install
