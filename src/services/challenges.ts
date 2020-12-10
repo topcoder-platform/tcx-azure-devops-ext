@@ -50,9 +50,14 @@ export function createOrUpdateChallenge(challenge: any) {
     body = omit(body, ['privateDescription']);
   }
   if (isUpdate) {
+    if (challenge.status) {
+      body = assign(body, {
+        status: challenge.status
+      });
+    }
     return axiosInstance.patch(
       `${CHALLENGE_API_URL}/${challenge.challengeId}`,
-      pick(body, ['name', 'description', 'privateDescription', 'prizeSets'])
+      pick(body, ['name', 'description', 'privateDescription', 'prizeSets', 'status'])
     );
   } else {
     return axiosInstance.post(`${CHALLENGE_API_URL}`, body);

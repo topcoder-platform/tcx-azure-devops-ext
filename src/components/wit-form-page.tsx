@@ -102,6 +102,13 @@ export default function WITFormPage() {
         prize: params.prize,
         privateDescription: params.privateDescription
       });
+      // If the newly created challenge status is 'New', update it to 'Draft'
+      if (res.data.status === 'New') {
+        await createOrUpdateChallenge({
+          challengeId: res.data.id,
+          status: 'Draft'
+        });
+      }
       // Set Initial Value
       setInitialValues({
         description,

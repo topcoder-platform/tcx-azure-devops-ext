@@ -28,6 +28,13 @@ export default function ActionsTopcoderController() {
             projectId,
             prize: 0
           });
+          // If the newly created challenge status is 'New', update it to 'Draft'
+          if (res.data.status === 'New') {
+            await createOrUpdateChallenge({
+              challengeId: res.data.id,
+              status: 'Draft'
+            });
+          }
           window.open(`${WEBSITE}/challenges/${res.data.id}`, "_blank");
           await dataService.setValue(VSS.getWebContext().project.id + '_' + id, res.data.id, {scopeType: 'User'});
           isProcessed = true;

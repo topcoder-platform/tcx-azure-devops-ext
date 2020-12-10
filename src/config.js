@@ -49,7 +49,7 @@ export const NEW_CHALLENGE_TEMPLATE = process.env.REACT_APP_NEW_CHALLENGE_TEMPLA
     }
   ],
   tags: ['Other'],
-  status: 'Draft',
+  status: 'New',
   terms: [
 		{
 			id: "64d6e249-d7a5-4591-8ff5-e872f8a051f9",
