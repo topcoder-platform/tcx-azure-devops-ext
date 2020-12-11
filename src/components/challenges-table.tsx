@@ -93,13 +93,20 @@ const useStyles = makeStyles((theme) => ({
     marginBottom: theme.spacing(2),
   },
   table: {
-    minWidth: 750,
+    minWidth: 500,
   },
   name: {
+    minWidth: 120,
     width: 300
   },
   type: {
-    width: 100
+    width: 120
+  },
+  date: {
+    width: 120
+  },
+  state: {
+    width: 200
   },
   visuallyHidden: {
     border: 0,
@@ -231,13 +238,13 @@ function ChallengeTable(props: any) {
                         </TableCell>
                       </ConditionalChildren>
                       <ConditionalChildren renderChildren={!headCells[2].hidden}>
-                        <TableCell align="left">{formatDate(row.startDate)}</TableCell>
+                        <TableCell align="left" className={classes.date}>{formatDate(row.startDate)}</TableCell>
                       </ConditionalChildren>
                       <ConditionalChildren renderChildren={!headCells[3].hidden}>
-                        <TableCell align="left">{formatDate(row.endDate)}</TableCell>
+                        <TableCell align="left" className={classes.date}>{formatDate(row.endDate)}</TableCell>
                       </ConditionalChildren>
                       <ConditionalChildren renderChildren={!headCells[4].hidden}>
-                        <TableCell align="left">{row.phases}</TableCell>
+                        <TableCell align="left" className={classes.state}>{row.phases}</TableCell>
                       </ConditionalChildren>
                     </>}
                     hover={true}

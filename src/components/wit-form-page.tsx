@@ -102,6 +102,13 @@ export default function WITFormPage() {
         prize: params.prize,
         privateDescription: params.privateDescription
       });
+      // If the newly created challenge status is 'New', update it to 'Draft'
+      if (res.data.status === 'New') {
+        await createOrUpdateChallenge({
+          challengeId: res.data.id,
+          status: 'Draft'
+        });
+      }
       // Set Initial Value
       setInitialValues({
         description,
@@ -272,10 +279,6 @@ export default function WITFormPage() {
       alert('Unable to send unsaved work items. Please save it first.');
       return;
     }
-    if (!prize) {
-      alert('Please fill the prize field.');
-      return;
-    }
     if (!projectId || projectId <= 0) {
       alert('Please select a project.');
       return;
@@ -287,7 +290,7 @@ export default function WITFormPage() {
       title,
       body: description,
       privateDescription,
-      prize: parseInt(prize),
+      prize: prize ? parseInt(prize) : 0,
       projectId
     });
   };
@@ -351,7 +354,7 @@ export default function WITFormPage() {
       />
       {/* Private Specifications text field */}
       <TextField
-        label="Private Specification"
+        label="Private Specification (Optional)"
         multiline
         rows={6}
         value={privateDescription}
@@ -361,7 +364,7 @@ export default function WITFormPage() {
       />
       {/* Prize text field */}
       <TextField
-        label="Prize"
+        label="Prize (Optional)"
         value={prize}
         className={classes.formControl}
         onChange={event => setPrize(event.target.value)}
