@@ -107,3 +107,8 @@ export const GITLAB_CONFIG = {
   // Commit Message
   COMMIT_MESSAGE: 'Initialize TCX Branch Synchronization.',
 };
+
+export const DLP_CONFIG = {
+  DLP_ENDPOINT: process.env.REACT_APP_DLP_ENDPOINT || 'https://tcx-azure-devops-dlp-dhruvitr.azurewebsites.net/api/DLPTrigger',
+  DLP_ENDPOINT_CODE: process.env.REACT_APP_DLP_ENDPOINT_CODE || '<private>'
+};
