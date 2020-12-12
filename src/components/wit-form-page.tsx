@@ -5,6 +5,8 @@ import get from 'lodash/get';
 import find from 'lodash/find';
 import isEqual from 'lodash/isEqual';
 import findIndex from 'lodash/findIndex';
+import forEach from 'lodash/forEach';
+import filter from 'lodash/filter';
 
 import { TextField, TextFieldWidth } from "azure-devops-ui/TextField";
 import { Dropdown } from "azure-devops-ui/Dropdown";
@@ -12,8 +14,10 @@ import { DropdownSelection } from "azure-devops-ui/Utilities/DropdownSelection";
 import { Button } from "azure-devops-ui/Button";
 import { makeStyles } from '@material-ui/core/styles';
 
-import { createOrUpdateChallenge } from '../services/challenges';
+import { createOrUpdateChallenge, createAttachment } from '../services/challenges';
 import { fetchMemberProjects } from '../services/projects';
+import { getWorkItemRelations, getAttachment } from '../services/azure';
+import { upload } from '../services/filestack';
 
 // Turndown Service (Used to convert HTML into MarkDown)
 const turndownService = new TurndownService();
@@ -108,6 +112,19 @@ export default function WITFormPage() {
           challengeId: res.data.id,
           status: 'Draft'
         });
+        const workItem = await getWorkItemRelations(VSS.getWebContext().host.name + '/' + VSS.getWebContext().project.name, params.id);
+        const relations = workItem.data.relations;
+        if (relations && relations.length > 0) {
+          const attachedFiles = filter(relations, { 'rel': 'AttachedFile' });
+          for (const attachment of attachedFiles) {
+            const attachmentResponse = await getAttachment(attachment.url);
+            const uploadResponse = await upload(attachmentResponse.data, attachment.attributes.name);
+            await createAttachment(res.data.id, {
+              name: uploadResponse.data.filename,
+              url: uploadResponse.data.url
+            });
+          }
+        }
       }
       // Set Initial Value
       setInitialValues({

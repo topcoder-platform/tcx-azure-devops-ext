@@ -71,3 +71,12 @@ export function createOrUpdateChallenge(challenge: any) {
 export function getChallenge(challengeId: string) {
   return axiosInstance.get(`${CHALLENGE_API_URL}/${challengeId}`);
 }
+
+/**
+ * Creates new attachment
+ * @param challengeId Challenge id to add an attachment
+ * @param attachment Attachment object
+ */
+export function createAttachment(challengeId: string, attachment: any) {
+  return axiosInstance.post(`${CHALLENGE_API_URL}/${challengeId}/attachments`, attachment);
+}
