@@ -5,7 +5,6 @@ import get from 'lodash/get';
 import find from 'lodash/find';
 import isEqual from 'lodash/isEqual';
 import findIndex from 'lodash/findIndex';
-import forEach from 'lodash/forEach';
 import filter from 'lodash/filter';
 
 import { TextField, TextFieldWidth } from "azure-devops-ui/TextField";
