@@ -47,6 +47,16 @@ export function getWorkItemRelations(project: string, id: string) {
 }
 
 /**
+ * Api for download work item attachment
+ * @returns {Promise<*>}
+ */
+export function getAttachment(url: string) {
+  return axiosInstance.get(`${url}`, {
+    responseType: 'arraybuffer'
+  });
+}
+
+/**
  * Fetches the ADO Git Client
  */
 export async function getAdoClients(): Promise<{
