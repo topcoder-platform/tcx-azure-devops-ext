@@ -1,8 +1,8 @@
 {
     "manifestVersion": 1,
-    "id": "topcoder-x",
-    "publisher": "JustinGasperTopcodertest",
-    "version": "1.0.89",
+    "id": "topcoder-devops-ext",
+    "publisher": "Topcoder",
+    "version": "1.0.81",
     "name": "Topcoder X",
     "description": "Topcoder X is an application used by copilots to manage direct tasks.",
     "public": false,
@@ -54,22 +54,10 @@
                 "previewImageUrl": "logo512.png",
                 "supportedSizes": [
                      {
-                        "rowSpan": 5,
-                        "columnSpan": 5
-                    },
-                    {
-                        "rowSpan": 4,
-                        "columnSpan": 5
-                    },
-                    {
-                        "rowSpan": 4,
-                        "columnSpan": 4
-                    },
-                    {
-                        "rowSpan": 3,
-                        "columnSpan": 4
-                    }
-                ],
+                            "rowSpan": 5,
+                            "columnSpan": 5
+                        }
+                    ],
                 "supportedScopes": ["project_team"]
             }
         },
@@ -123,10 +111,6 @@
                     {
                         "rowSpan": 3,
                         "columnSpan": 6
-                    },
-                    {
-                        "rowSpan": 2,
-                        "columnSpan": 4
                     }
                 ],
                 "supportedScopes": [
