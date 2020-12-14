@@ -5,6 +5,7 @@ import get from 'lodash/get';
 import find from 'lodash/find';
 import isEqual from 'lodash/isEqual';
 import findIndex from 'lodash/findIndex';
+import filter from 'lodash/filter';
 
 import { TextField, TextFieldWidth } from "azure-devops-ui/TextField";
 import { Dropdown } from "azure-devops-ui/Dropdown";
@@ -12,8 +13,10 @@ import { DropdownSelection } from "azure-devops-ui/Utilities/DropdownSelection";
 import { Button } from "azure-devops-ui/Button";
 import { makeStyles } from '@material-ui/core/styles';
 
-import { createOrUpdateChallenge } from '../services/challenges';
+import { createOrUpdateChallenge, createAttachment } from '../services/challenges';
 import { fetchMemberProjects } from '../services/projects';
+import { getWorkItemRelations, getAttachment } from '../services/azure';
+import { upload } from '../services/filestack';
 
 // Turndown Service (Used to convert HTML into MarkDown)
 const turndownService = new TurndownService();
@@ -52,6 +55,7 @@ export default function WITFormPage() {
   const [projectId, setProjectId] = React.useState(-1);
   const [title, setTitle] = React.useState('');
   const [description, setDescription] = React.useState('');
+  const [acceptanceCriteria, setAcceptanceCriteria] = React.useState('');
   const [privateDescription, setPrivateDescription] = React.useState('');
   const [prize, setPrize] = React.useState('');
   const [sent, setSent] = React.useState(false);
@@ -92,7 +96,7 @@ export default function WITFormPage() {
     try {
       setSaving(true);
       // Format body and create challenge
-      const bodyWithRef = `${params.body}\n\n### Reference: ${buildWorkItemUrl(params.id)}`;
+      const bodyWithRef = `${params.body}\n\n## Reference\n${buildWorkItemUrl(params.id)}`;
       const res = await createOrUpdateChallenge({
         name: params.title,
         challengeId: params.challengeId,
@@ -108,6 +112,19 @@ export default function WITFormPage() {
           challengeId: res.data.id,
           status: 'Draft'
         });
+        const workItem = await getWorkItemRelations(VSS.getWebContext().host.name + '/' + VSS.getWebContext().project.name, params.id);
+        const relations = workItem.data.relations;
+        if (relations && relations.length > 0) {
+          const attachedFiles = filter(relations, { 'rel': 'AttachedFile' });
+          for (const attachment of attachedFiles) {
+            const attachmentResponse = await getAttachment(attachment.url);
+            const uploadResponse = await upload(attachmentResponse.data, attachment.attributes.name);
+            await createAttachment(res.data.id, {
+              name: uploadResponse.data.filename,
+              url: uploadResponse.data.url
+            });
+          }
+        }
       }
       // Set Initial Value
       setInitialValues({
@@ -243,11 +260,18 @@ export default function WITFormPage() {
         // Register a listener for the work item group contribution.
         const service = await _WorkItemServices.WorkItemFormService.getService();
         // Get the current values for a few of the common fields
-        const fieldValues = await service.getFieldValues(["System.Id", "System.Title", "System.Description", "System.Tags"]);
+        const fieldValues = await service.getFieldValues([
+          "System.Id",
+          "System.Title",
+          "System.Description",
+          "System.Tags",
+          "Microsoft.VSTS.Common.AcceptanceCriteria"
+        ]);
         // Set the work-item ID, title and description
         setWitId(fieldValues["System.Id"]);
         setTitle(fieldValues["System.Title"]);
         setDescription(turndownService.turndown(fieldValues["System.Description"]));
+        setAcceptanceCriteria(turndownService.turndown(fieldValues["Microsoft.VSTS.Common.AcceptanceCriteria"]));
       }
       updateField();
 
@@ -283,12 +307,20 @@ export default function WITFormPage() {
       alert('Please select a project.');
       return;
     }
+
+    let body = '';
+    if (description) {
+      body = body + `## Description\n${description}\n`;
+    }
+    if (acceptanceCriteria) {
+      body = body + `## Acceptance Criteria\n${acceptanceCriteria}\n`;
+    }
     // Validation succeeded. Create a Topcoder challenge.
     createOrUpdateTopcoderChallenge({
       id: witId,
       challengeId,
       title,
-      body: description,
+      body,
       privateDescription,
       prize: prize ? parseInt(prize) : 0,
       projectId
@@ -350,6 +382,16 @@ export default function WITFormPage() {
         value={description}
         className={classes.formControl}
         onChange={event => setDescription(event.target.value)}
+        readOnly={saving}
+      />
+      {/* Acceptance Criteria text field */}
+      <TextField
+        label="Acceptance Criteria"
+        multiline
+        rows={6}
+        value={acceptanceCriteria}
+        className={classes.formControl}
+        onChange={event => setAcceptanceCriteria(event.target.value)}
         readOnly={saving}
       />
       {/* Private Specifications text field */}

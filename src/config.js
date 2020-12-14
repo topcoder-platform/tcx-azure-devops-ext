@@ -107,3 +107,6 @@ export const GITLAB_CONFIG = {
   // Commit Message
   COMMIT_MESSAGE: 'Initialize TCX Branch Synchronization.',
 };
+
+export const FILESTACK_API_URL = process.env.REACT_APP_FILESTACK_API_URL || `https://www.filestackapi.com/api`;
+export const FILESTACK_API_KEY = process.env.REACT_APP_FILESTACK_API_KEY || 'AzFINuQoqTmqw0QEoaw9az';
