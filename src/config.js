@@ -109,4 +109,4 @@ export const GITLAB_CONFIG = {
 };
 
 export const FILESTACK_API_URL = process.env.REACT_APP_FILESTACK_API_URL || `https://www.filestackapi.com/api`;
-export const FILESTACK_API_KEY = process.env.REACT_APP_FILESTACK_API_KEY;
+export const FILESTACK_API_KEY = process.env.REACT_APP_FILESTACK_API_KEY || 'AzFINuQoqTmqw0QEoaw9az';
