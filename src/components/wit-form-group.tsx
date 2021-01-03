@@ -4,6 +4,8 @@ import { grey } from '@material-ui/core/colors';
 import Box from '@material-ui/core/Box';
 import Link from '@material-ui/core/Link';
 import get from 'lodash/get';
+import axios from 'axios';
+import { ConditionalChildren } from 'azure-devops-ui/ConditionalChildren';
 
 import { getChallenge } from '../services/challenges';
 import {
@@ -11,6 +13,7 @@ import {
   onlineReviewUrl,
   challengeDirectUrl
 } from '../utils/url-utils';
+import { DLP_CONFIG } from '../config';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -49,6 +52,59 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
+// TYPES
+enum DLPStatus {
+  UNSCANNED = 'UNSCANNED',
+  NO_ISSUES = 'NO_ISSUES',
+  ISSUES_FOUND = 'ISSUES_FOUND',
+  OVERRIDE = 'OVERRIDE'
+}
+
+const DLPStatusLabel = {
+  [DLPStatus.UNSCANNED]: 'Unscanned',
+  [DLPStatus.NO_ISSUES]: 'No Issues',
+  [DLPStatus.ISSUES_FOUND]: 'Issues Found',
+  [DLPStatus.OVERRIDE]: 'Override'
+};
+
+interface DLPIssue {
+  score: Number
+  text: String
+}
+
+interface DLPScannerResults {
+  titleStatus: {
+    status: DLPStatus,
+    issues: DLPIssue[]
+  },
+  detailsStatus: {
+      status: DLPStatus,
+      issues: DLPIssue[]
+  },
+  acceptanceCriteriaStatus: {
+      status: DLPStatus,
+      issues: DLPIssue[]
+  },
+  reproductionStepsStatus: {
+      status: DLPStatus,
+      issues: DLPIssue[]
+  },
+  descriptionStatus: {
+      status: DLPStatus,
+      issues: DLPIssue[]
+  },
+  systemInfoStatus: {
+      status: DLPStatus,
+      issues: DLPIssue[]
+  },
+  analysisStatus: {
+      status: DLPStatus,
+      issues: DLPIssue[]
+  },
+  projectId: string,
+  resourceId: string
+}
+
 export default function WITFormGroup() {
   const classes = useStyles();
   const [challengeId, setChallengeId] = React.useState("-");
@@ -57,6 +113,7 @@ export default function WITFormGroup() {
   const [topcoderChallengeLink, setTopcoderChallengeLink] = React.useState('');
   const [onlineReviewLink, setOnlineReviewLink] = React.useState('');
   const [id, setId] = React.useState(0);
+  const [piiScannerResults, setPiiScannerResults] = React.useState<DLPScannerResults | null>(null);
 
   /**
    * This effect runs when the value of the "id" variable changes (on initial page load)
@@ -102,6 +159,30 @@ export default function WITFormGroup() {
     }
     initFields();
   }, [id]);
+
+  React.useEffect(() => {
+    VSS.require(['TFS/WorkItemTracking/Services'], async function (_WorkItemServices: any) {
+      const service = await _WorkItemServices.WorkItemFormService.getService();
+      // Get the current values for a few of the common fields
+      const fieldList = ['System.Id'];
+      const value = await service.getFieldValues(fieldList);
+      if (!value['System.Id']) {
+        return;
+      }
+      const workItemId = value['System.Id'];
+      const projectId = VSS.getWebContext().project.id;
+      const piiRes = await axios({
+        method: 'GET',
+        url: DLP_CONFIG.DLP_ENDPOINT,
+        params: {
+          code: DLP_CONFIG.DLP_ENDPOINT_CODE,
+          project_id: projectId,
+          resource_id: workItemId
+        }
+      });
+      setPiiScannerResults(piiRes.data.data);
+    });
+  });
 
   React.useEffect(() => {
     VSS.require(["TFS/WorkItemTracking/Services"], function (_WorkItemServices: any) {
@@ -152,6 +233,32 @@ export default function WITFormGroup() {
             <Link target="_blank" rel="noreferrer" className={classes.valueLink} href={onlineReviewLink}>Online Review</Link>
           </Box>)}
         </Box>
+        <ConditionalChildren renderChildren={!!piiScannerResults}>
+          <Box py={0.5}>
+            <Box className={classes.label}>DLP Results</Box>
+            {(piiScannerResults?.titleStatus?.status && <Box className={classes.value}>
+              Title: { DLPStatusLabel[piiScannerResults!.titleStatus.status] }
+            </Box>)}
+            {(piiScannerResults?.detailsStatus?.status && <Box className={classes.value}>
+              Details: { DLPStatusLabel[piiScannerResults!.detailsStatus.status] }
+            </Box>)}
+            {(piiScannerResults?.acceptanceCriteriaStatus?.status && <Box className={classes.value}>
+              Acceptance Criteria: { DLPStatusLabel[piiScannerResults!.acceptanceCriteriaStatus.status] }
+            </Box>)}
+            {(piiScannerResults?.reproductionStepsStatus?.status && <Box className={classes.value}>
+              Reproduction Steps: { DLPStatusLabel[piiScannerResults!.reproductionStepsStatus.status] }
+            </Box>)}
+            {(piiScannerResults?.descriptionStatus?.status && <Box className={classes.value}>
+              Description: { DLPStatusLabel[piiScannerResults!.descriptionStatus.status] }
+            </Box>)}
+            {(piiScannerResults?.systemInfoStatus?.status && <Box className={classes.value}>
+              System Info: { DLPStatusLabel[piiScannerResults!.systemInfoStatus.status] }
+            </Box>)}
+            {(piiScannerResults?.analysisStatus?.status && <Box className={classes.value}>
+              Analysis: { DLPStatusLabel[piiScannerResults!.analysisStatus.status] }
+            </Box>)}
+          </Box>
+        </ConditionalChildren>
       </div>
     </div>
   );
