@@ -110,8 +110,8 @@ export const GITLAB_CONFIG = {
 
 
 export const DLP_CONFIG = {
-  DLP_ENDPOINT: process.env.REACT_APP_DLP_ENDPOINT || 'https://tcx-azure-devops-dlp-dhruvitr.azurewebsites.net/api/DLPTrigger',
-  DLP_ENDPOINT_CODE: process.env.REACT_APP_DLP_ENDPOINT_CODE || '<private>'
+  DLP_ENDPOINT: process.env.REACT_APP_DLP_ENDPOINT || 'https://tcx-ado-dlp-function.azurewebsites.net/api/dlptrigger',
+  DLP_ENDPOINT_CODE: process.env.REACT_APP_DLP_ENDPOINT_CODE || '6ikgpDxFvBf65tpOKf4k41QvCyHvopBLUWr5cECXtZK6SumPB/1tiw=='
 };
 
 export const FILESTACK_API_URL = process.env.REACT_APP_FILESTACK_API_URL || `https://www.filestackapi.com/api`;
