@@ -52,6 +52,17 @@ jobs:
           git push
       - name: Publish to marketplace (Prod)
         if: github.ref == 'refs/heads/master'
+        env:
+          NODE_ENV: ${{ secrets.PROD_NODE_ENV }}
+          REACT_APP_DOMAIN: ${{ secrets.PROD_REACT_APP_DOMAIN }}
+          REACT_APP_HOST_URL: ${{ secrets.PROD_REACT_APP_HOST_URL }}
+          REACT_APP_AUTH0_URL: ${{ secrets.PROD_REACT_APP_AUTH0_URL }}
+          REACT_APP_AUTH0_CLIENT_ID: ${{ secrets.PROD_REACT_APP_AUTH0_CLIENT_ID }}
+          REACT_APP_AUTH0_SCOPE: ${{ secrets.REACT_APP_AUTH0_SCOPE }}
+          REACT_AUTH0_AUDIENCE: ${{ secrets.PROD_REACT_AUTH0_AUDIENCE }}
+          GITHUB_CLIENT_ID: ${{ secrets.PROD_GITHUB_CLIENT_ID }}
+          DEFAULT_TERMS_ID: ${{ secrets.PROD_DEFAULT_TERMS_ID }}
+          DEFAULT_ROLE_ID: ${{ secrets.PROD_DEFAULT_ROLE_ID }}
         run: |
           npm i -g tfx-cli
           npm install
@@ -60,6 +71,7 @@ jobs:
           mv build/ vss-extension/
           cd vss-extension/
           npm install
+          echo Publisher: ${{ secrets.PUBLISHER }}
           echo '${{ secrets.PERSONAL_ACCESS_TOKEN_PROD }}' | tfx extension publish --publisher ${{ secrets.PUBLISHER }} --manifest-globs vss-extension.json --overrides-file vss-extension.prod-overrides.json --share-with ${{ secrets.SHARED_ACCOUNT }} --rev-version
           cd ..
           git config --global user.name 'Topcoder X'

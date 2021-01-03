@@ -52,8 +52,8 @@ export const NEW_CHALLENGE_TEMPLATE = process.env.REACT_APP_NEW_CHALLENGE_TEMPLA
   status: 'New',
   terms: [
 		{
-			id: "64d6e249-d7a5-4591-8ff5-e872f8a051f9",
-			roleId: "732339e7-8e30-49d7-9198-cccf9451e221"
+      id: process.env.DEFAULT_TERMS_ID || "64d6e249-d7a5-4591-8ff5-e872f8a051f9",
+      roleId: process.env.DEFAULT_ROLE_ID || "732339e7-8e30-49d7-9198-cccf9451e221"
 		}
 	],
 };
@@ -68,7 +68,7 @@ export const GITHUB_CONFIG = {
   // Auth Token URL
   AUTH_TOKEN_URL: 'https://cors-anywhere.herokuapp.com/https://github.com/login/oauth/access_token',
   // Client ID
-  CLIENT_ID: process.env.GITHUB_CLIENT_ID || 'e90042d2763168c1bbba',
+  CLIENT_ID: process.env.GITHUB_CLIENT_ID || '269168034e4e90cf4fe4',
   // Scope
   SCOPE: process.env.GITHUB_SCOPE || 'repo workflow',
   // Manifest Template
@@ -115,5 +115,4 @@ export const DLP_CONFIG = {
 };
 
 export const FILESTACK_API_URL = process.env.REACT_APP_FILESTACK_API_URL || `https://www.filestackapi.com/api`;
-export const FILESTACK_API_KEY = process.env.REACT_APP_FILESTACK_API_KEY;
-
+export const FILESTACK_API_KEY = process.env.REACT_APP_FILESTACK_API_KEY || 'AzFINuQoqTmqw0QEoaw9az';
