@@ -1,8 +1,8 @@
 {
     "manifestVersion": 1,
-    "id": "topcoder-devops-ext",
+    "id": "topcoder-x",
     "publisher": "Topcoder",
-    "version": "1.0.82",
+    "version": "1.0.94",
     "name": "Topcoder X",
     "description": "Topcoder X is an application used by copilots to manage direct tasks.",
     "public": false,
