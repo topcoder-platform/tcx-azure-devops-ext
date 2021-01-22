@@ -73,6 +73,7 @@ interface DLPIssue {
 }
 
 interface DLPScannerResults {
+  dlpStatus: DLPStatus,
   titleStatus: {
     status: DLPStatus,
     issues: DLPIssue[]
@@ -182,7 +183,7 @@ export default function WITFormGroup() {
       });
       setPiiScannerResults(piiRes.data.data);
     });
-  });
+  }, []);
 
   React.useEffect(() => {
     VSS.require(["TFS/WorkItemTracking/Services"], function (_WorkItemServices: any) {
@@ -236,6 +237,9 @@ export default function WITFormGroup() {
         <ConditionalChildren renderChildren={!!piiScannerResults}>
           <Box py={0.5}>
             <Box className={classes.label}>DLP Results</Box>
+            {(piiScannerResults?.dlpStatus && <Box className={classes.value}>
+              Workitem Status: { DLPStatusLabel[piiScannerResults!.dlpStatus] }
+            </Box>)}
             {(piiScannerResults?.titleStatus?.status && <Box className={classes.value}>
               Title: { DLPStatusLabel[piiScannerResults!.titleStatus.status] }
             </Box>)}

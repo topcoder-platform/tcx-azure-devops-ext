@@ -133,7 +133,7 @@ function ProjectsTable() {
   const [selected, setSelected] = React.useState<any[]>([]);
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
-  const [data, setData] = React.useState([]);
+  const [data, setData] = React.useState<any[]>([]);
 
   React.useEffect(() => {
     const filters = {

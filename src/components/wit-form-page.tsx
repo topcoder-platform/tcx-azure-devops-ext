@@ -213,7 +213,8 @@ export default function WITFormPage() {
         // Fetch the user's projects.
         const filters = {
           sort: 'lastActivityAt desc',
-          memberOnly: false
+          memberOnly: false,
+          status: 'active'
         };
         const projects = await fetchMemberProjects(filters);
         // Sort the projects and set their value

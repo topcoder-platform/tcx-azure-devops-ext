@@ -7,12 +7,20 @@ import { PROJECT_API_URL } from '../config';
  * Api request for fetching member's projects
  */
 export async function fetchMemberProjects(filters: any) {
-  const params = {
-    ...filters
-  };
-
-  const response = await axiosInstance.get(`${PROJECT_API_URL}?${queryString.stringify(params)}`);
-  return _.get(response, 'data');
+  let total = Infinity;
+  let page = 1;
+  const items = [];
+  while (items.length !== total) {
+    const params = {
+      ...filters,
+      page
+    };
+    const response = await axiosInstance.get(`${PROJECT_API_URL}?${queryString.stringify(params)}`);
+    items.push(..._.get(response, 'data'));
+    total = Number(_.get(response, 'headers.x-total'));
+    page += 1;
+  }
+  return items;
 }
 
 /**
