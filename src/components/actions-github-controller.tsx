@@ -1,7 +1,9 @@
 import React from 'react';
 import GitHub from 'github-api';
+import filter from 'lodash/filter';
+import forEach from 'lodash/forEach';
+
 import { getWorkItemRelations } from '../services/azure';
-import _ from 'lodash';
 
 export default function ActionsGithubController() {
 
@@ -34,8 +36,8 @@ export default function ActionsGithubController() {
             const relations = workItem.data.relations;
             if (relations && relations.length > 0) {
               bodyWithRef = bodyWithRef + '\n\n### Attachments\n';
-              const attachedFiles = _.filter(relations, { 'rel': 'AttachedFile' });
-              _.forEach(attachedFiles, function(attachment) {
+              const attachedFiles = filter(relations, { 'rel': 'AttachedFile' });
+              forEach(attachedFiles, function(attachment) {
                 bodyWithRef = bodyWithRef + `<a href="${attachment.url}" download>${attachment.attributes.name}</a>`;
                 bodyWithRef = bodyWithRef + '\n';
               });

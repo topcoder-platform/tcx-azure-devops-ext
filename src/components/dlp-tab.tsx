@@ -4,7 +4,9 @@ import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import isEqual from 'lodash/isEqual';
 import { Checkbox, FormControl, FormControlLabel, FormGroup } from '@material-ui/core';
-import { defaultDlpConfig, DLPConfig, getDlpConfig, saveDlpConfig } from '../services/dlp';
+
+import { defaultDlpConfig, getDlpConfig, saveDlpConfig } from '../services/dlp';
+import { DLPConfig } from '../types/dlp';
 
 const useStyles = makeStyles((theme) => ({
   root: {

@@ -39,6 +39,7 @@ TabPanel.propTypes = {
   children: PropTypes.node,
   index: PropTypes.any.isRequired,
   value: PropTypes.any.isRequired,
+  style: PropTypes.any
 };
 
 function a11yProps(index: number) {
@@ -91,7 +92,7 @@ export default function VerticalTabs() {
       <TabPanel value={value} index={0}>
         <AccountTab />
       </TabPanel>
-      <TabPanel value={value} index={1}>
+      <TabPanel value={value} index={1} style={{ width: '100%' }}>
         <ProjectsTable />
       </TabPanel>
       <TabPanel value={value} index={2}>
