@@ -108,11 +108,5 @@ export const GITLAB_CONFIG = {
   COMMIT_MESSAGE: 'Initialize TCX Branch Synchronization.',
 };
 
-
-export const DLP_CONFIG = {
-  DLP_ENDPOINT: process.env.REACT_APP_DLP_ENDPOINT || 'https://prod-tcx-ado-dlp-function.azurewebsites.net/api/dlptrigger',
-  DLP_ENDPOINT_CODE: process.env.REACT_APP_DLP_ENDPOINT_CODE || '/9xAlRwWAUbSovqjEWTfYBBnBoRTQcCIl181jKRAJYJVQVZr2AEDqg=='
-};
-
 export const FILESTACK_API_URL = process.env.REACT_APP_FILESTACK_API_URL || `https://www.filestackapi.com/api`;
 export const FILESTACK_API_KEY = process.env.REACT_APP_FILESTACK_API_KEY || 'AzFINuQoqTmqw0QEoaw9az';

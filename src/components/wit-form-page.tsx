@@ -8,6 +8,7 @@ import findIndex from 'lodash/findIndex';
 import filter from 'lodash/filter';
 
 import { TextField, TextFieldWidth } from "azure-devops-ui/TextField";
+import { MessageCard, MessageCardSeverity } from "azure-devops-ui/MessageCard";
 import { Dropdown } from "azure-devops-ui/Dropdown";
 import { DropdownSelection } from "azure-devops-ui/Utilities/DropdownSelection";
 import { Button } from "azure-devops-ui/Button";
@@ -17,6 +18,7 @@ import { createOrUpdateChallenge, createAttachment } from '../services/challenge
 import { fetchMemberProjects } from '../services/projects';
 import { getWorkItemRelations, getAttachment } from '../services/azure';
 import { upload } from '../services/filestack';
+import { DLPStatus, getDlpConfig, getDlpStatus } from '../services/dlp';
 
 // Turndown Service (Used to convert HTML into MarkDown)
 const turndownService = new TurndownService();
@@ -42,6 +44,10 @@ const useStyles = makeStyles((theme) => ({
   dropdownLabel: {
     display: 'block',
     marginBottom: '8px'
+  },
+  dlpMessageBox: {
+    width: '100%',
+    margin: 12
   }
 }));
 
@@ -61,6 +67,7 @@ export default function WITFormPage() {
   const [sent, setSent] = React.useState(false);
   const [projects, setProjects] = React.useState<any[]>([]);
   const [isEdited, setIsEdited] = React.useState(false);
+  const [isDlpOk, setIsDlpOk] = React.useState(true);
   const [initialValues, setInitialValues] = React.useState({ prize: '', title: '', description: '', privateSpecificaton: '' });
 
   /**
@@ -228,7 +235,6 @@ export default function WITFormPage() {
   }, []);
 
   React.useEffect(() => {
-    // debugger;
     const idx = findIndex(projects, { id: `${projectId}` });
     if (idx >= 0) {
       projectSelection.select(idx);
@@ -296,6 +302,25 @@ export default function WITFormPage() {
   }, []);
 
   /**
+   * DLP Checks
+   */
+  React.useEffect(() => {
+    (async () => {
+      if (!witId) {
+        return;
+      }
+      const dlpConfig = await getDlpConfig();
+      if (!dlpConfig.blockChallengeCreation || !dlpConfig.dlpForWorkItems) {
+        return;
+      }
+      const dlpInfo = await getDlpStatus(witId);
+      if (!dlpInfo?.dlpStatus || dlpInfo.dlpStatus !== DLPStatus.NO_ISSUES) {
+        setIsDlpOk(false);
+      }
+    })();
+  }, [witId]);
+
+  /**
    * This is called when the "Send to Topcoder" button is clicked.
    * Validates the user-entered parameters, and creates a Topcoder challenge if validation succeeds.
    */
@@ -338,6 +363,17 @@ export default function WITFormPage() {
 
   return (
     <div className={classes.root}>
+      {/* DLP Error Message */}
+      {!isDlpOk &&
+        <MessageCard
+          className={classes.dlpMessageBox}
+          severity={MessageCardSeverity.Error}
+          children={<>
+            <div>DLP scanning failed.</div><br/>
+            <div>Please fix the issue and try again.</div>
+          </>}
+        />
+      }
       {/* Work Item ID text field */}
       <TextField
         disabled
@@ -418,7 +454,7 @@ export default function WITFormPage() {
         text={sent ? 'Edit Challenge' : 'Send to Topcoder'}
         className={classes.sendButton}
         primary={true}
-        disabled={(sent && !isEdited) || saving}
+        disabled={(sent && !isEdited) || saving || !isDlpOk}
         onClick={handleSendButtonClick}
       />
       {sent && <Button

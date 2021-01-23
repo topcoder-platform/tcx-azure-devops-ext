@@ -13,6 +13,7 @@ import AccountTab from './account-tab';
 import ChallengeTab from './challenges-tab';
 import ProjectsTable from './projects-table';
 import SettingsTab from './settings-tab';
+import DLPConfigTab from './dlp-tab';
 
 function TabPanel(props: any) {
   const { children, value, index, ...other } = props;
@@ -52,7 +53,8 @@ const useStyles = makeStyles((theme) => ({
     flexGrow: 1,
     backgroundColor: theme.palette.background.paper,
     display: 'flex',
-    height: 224,
+    height: '100%',
+    minHeight: 300
   },
   tabs: {
     borderRight: `1px solid ${theme.palette.divider}`,
@@ -84,6 +86,7 @@ export default function VerticalTabs() {
         <Tab label="Projects" {...a11yProps(1)} />
         <Tab label="Challenges" {...a11yProps(2)} />
         <Tab label="Settings" {...a11yProps(3)} />
+        <Tab label="DLP Config" {...a11yProps(3)} />
       </Tabs>
       <TabPanel value={value} index={0}>
         <AccountTab />
@@ -96,6 +99,9 @@ export default function VerticalTabs() {
       </TabPanel>
       <TabPanel value={value} index={3}>
         <SettingsTab />
+      </TabPanel>
+      <TabPanel value={value} index={4}>
+        <DLPConfigTab />
       </TabPanel>
     </div>
   );
