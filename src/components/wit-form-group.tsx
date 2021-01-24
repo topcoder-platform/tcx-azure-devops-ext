@@ -4,7 +4,6 @@ import { grey } from '@material-ui/core/colors';
 import Box from '@material-ui/core/Box';
 import Link from '@material-ui/core/Link';
 import get from 'lodash/get';
-import axios from 'axios';
 import { ConditionalChildren } from 'azure-devops-ui/ConditionalChildren';
 
 import { getChallenge } from '../services/challenges';
@@ -13,7 +12,11 @@ import {
   onlineReviewUrl,
   challengeDirectUrl
 } from '../utils/url-utils';
-import { DLP_CONFIG } from '../config';
+import {
+  DLPScannerResults,
+  DLPStatusLabel,
+  getDlpStatus
+} from '../services/dlp';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -51,60 +54,6 @@ const useStyles = makeStyles((theme) => ({
     overflow: 'hidden'
   }
 }));
-
-// TYPES
-enum DLPStatus {
-  UNSCANNED = 'UNSCANNED',
-  NO_ISSUES = 'NO_ISSUES',
-  ISSUES_FOUND = 'ISSUES_FOUND',
-  OVERRIDE = 'OVERRIDE'
-}
-
-const DLPStatusLabel = {
-  [DLPStatus.UNSCANNED]: 'Unscanned',
-  [DLPStatus.NO_ISSUES]: 'No Issues',
-  [DLPStatus.ISSUES_FOUND]: 'Issues Found',
-  [DLPStatus.OVERRIDE]: 'Override'
-};
-
-interface DLPIssue {
-  score: Number
-  text: String
-}
-
-interface DLPScannerResults {
-  dlpStatus: DLPStatus,
-  titleStatus: {
-    status: DLPStatus,
-    issues: DLPIssue[]
-  },
-  detailsStatus: {
-      status: DLPStatus,
-      issues: DLPIssue[]
-  },
-  acceptanceCriteriaStatus: {
-      status: DLPStatus,
-      issues: DLPIssue[]
-  },
-  reproductionStepsStatus: {
-      status: DLPStatus,
-      issues: DLPIssue[]
-  },
-  descriptionStatus: {
-      status: DLPStatus,
-      issues: DLPIssue[]
-  },
-  systemInfoStatus: {
-      status: DLPStatus,
-      issues: DLPIssue[]
-  },
-  analysisStatus: {
-      status: DLPStatus,
-      issues: DLPIssue[]
-  },
-  projectId: string,
-  resourceId: string
-}
 
 export default function WITFormGroup() {
   const classes = useStyles();
@@ -171,17 +120,8 @@ export default function WITFormGroup() {
         return;
       }
       const workItemId = value['System.Id'];
-      const projectId = VSS.getWebContext().project.id;
-      const piiRes = await axios({
-        method: 'GET',
-        url: DLP_CONFIG.DLP_ENDPOINT,
-        params: {
-          code: DLP_CONFIG.DLP_ENDPOINT_CODE,
-          project_id: projectId,
-          resource_id: workItemId
-        }
-      });
-      setPiiScannerResults(piiRes.data.data);
+      const piiRes = await getDlpStatus(workItemId);
+      setPiiScannerResults(piiRes);
     });
   }, []);
 

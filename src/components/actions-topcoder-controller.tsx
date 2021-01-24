@@ -1,9 +1,10 @@
 import React from 'react';
 import { createOrUpdateChallenge } from '../services/challenges';
 import { WEBSITE } from '../config';
+import { DLPStatus, getDlpConfig, getDlpStatus } from '../services/dlp';
+import get from 'lodash/get';
 
 export default function ActionsTopcoderController() {
-
   const buildWorkItemUrl = (id: string) => {
     return 'https://dev.azure.com/' +
       VSS.getWebContext().host.name + '/' +
@@ -45,6 +46,18 @@ export default function ActionsTopcoderController() {
       })();
     };
 
+    const checkDlpStatus = async (workItemId: string) => {
+      if (!workItemId) {
+        return false;
+      }
+      const dlpConfig = await getDlpConfig();
+      if (!dlpConfig.blockChallengeCreation || !dlpConfig.dlpForWorkItems) {
+        return true;
+      }
+      const dlpInfo = await getDlpStatus(workItemId);
+      return get(dlpInfo, 'dlpStatus') === DLPStatus.NO_ISSUES;
+    };
+
     VSS.require(["TFS/WorkItemTracking/Services"], async function (_WorkItemServices: any) {
       // Register a listener for the work item group contribution.
       function getWorkItemFormService() {
@@ -65,14 +78,22 @@ export default function ActionsTopcoderController() {
             groupId: 'actions',
             action: async (_actionContext: any) => {
               const service = await getWorkItemFormService();
+              // Check for DLP Status
               // Get the current values for a few of the common fields
               const fieldList = ["System.Id", "System.Title", "System.Description", "System.Tags"];
               const value = await service.getFieldValues(fieldList);
               if (!value["System.Id"]) {
                 alert('Unable to send unsaved work items. Please save it first.');
-              } else {
-                createTopcoderChallenge(value["System.Id"], value["System.Title"], value["System.Description"]);
+                return;
               }
+              const workItemId = value["System.Id"];
+              debugger;
+              const dlpCheck = await checkDlpStatus(workItemId);
+              if (!dlpCheck) {
+                alert('DLP scanning failed. Please fix the issue and try again.');
+                return;
+              }
+              createTopcoderChallenge(workItemId, value["System.Title"], value["System.Description"]);
             }
           }];
         }
