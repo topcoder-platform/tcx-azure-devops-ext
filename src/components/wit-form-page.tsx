@@ -13,16 +13,17 @@ import { Dropdown } from "azure-devops-ui/Dropdown";
 import { DropdownSelection } from "azure-devops-ui/Utilities/DropdownSelection";
 import { Button } from "azure-devops-ui/Button";
 import { makeStyles } from '@material-ui/core/styles';
+import { ConditionalChildren } from 'azure-devops-ui/ConditionalChildren';
 
 import { createOrUpdateChallenge, createAttachment } from '../services/challenges';
 import { fetchMemberProjects } from '../services/projects';
 import { getWorkItemRelations, getAttachment } from '../services/azure';
 import { upload } from '../services/filestack';
-import { DLPStatus, getDlpConfig, getDlpStatus } from '../services/dlp';
+import { getDlpConfig, getDlpStatus } from '../services/dlp';
+import { DLPStatus } from '../types/dlp';
 
 // Turndown Service (Used to convert HTML into MarkDown)
 const turndownService = new TurndownService();
-
 
 const projectSelection = new DropdownSelection();
 
@@ -220,7 +221,7 @@ export default function WITFormPage() {
         // Fetch the user's projects.
         const filters = {
           sort: 'lastActivityAt desc',
-          memberOnly: false,
+          memberOnly: true,
           status: 'active'
         };
         const projects = await fetchMemberProjects(filters);
@@ -278,7 +279,9 @@ export default function WITFormPage() {
         setWitId(fieldValues["System.Id"]);
         setTitle(fieldValues["System.Title"]);
         setDescription(turndownService.turndown(fieldValues["System.Description"]));
-        setAcceptanceCriteria(turndownService.turndown(fieldValues["Microsoft.VSTS.Common.AcceptanceCriteria"]));
+        setAcceptanceCriteria(turndownService.turndown(
+          get(fieldValues, ["Microsoft.VSTS.Common.AcceptanceCriteria"], '')
+        ));
       }
       updateField();
 
@@ -364,16 +367,16 @@ export default function WITFormPage() {
   return (
     <div className={classes.root}>
       {/* DLP Error Message */}
-      {!isDlpOk &&
+      <ConditionalChildren renderChildren={!isDlpOk}>
         <MessageCard
-          className={classes.dlpMessageBox}
-          severity={MessageCardSeverity.Error}
-          children={<>
-            <div>DLP scanning failed.</div><br/>
-            <div>Please fix the issue and try again.</div>
-          </>}
-        />
-      }
+            className={classes.dlpMessageBox}
+            severity={MessageCardSeverity.Error}
+            children={<div>
+              <div>DLP scanning failed.</div>
+              <div>Please fix the issue and try again.</div>
+            </div>}
+          />
+      </ConditionalChildren>
       {/* Work Item ID text field */}
       <TextField
         disabled
@@ -457,13 +460,15 @@ export default function WITFormPage() {
         disabled={(sent && !isEdited) || saving || !isDlpOk}
         onClick={handleSendButtonClick}
       />
-      {sent && <Button
-        text='Discard Changes'
-        className={classes.sendButton}
-        primary={false}
-        disabled={!isEdited || saving}
-        onClick={handleDiscardButtonClicked}
-      />}
+      <ConditionalChildren renderChildren={!!(sent)}>
+        <Button
+          text='Discard Changes'
+          className={classes.sendButton}
+          primary={false}
+          disabled={!isEdited || saving}
+          onClick={handleDiscardButtonClicked}
+        />
+      </ConditionalChildren>
     </div>
   );
 }

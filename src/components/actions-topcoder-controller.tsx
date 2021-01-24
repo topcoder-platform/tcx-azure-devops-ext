@@ -1,8 +1,10 @@
 import React from 'react';
+import get from 'lodash/get';
+
 import { createOrUpdateChallenge } from '../services/challenges';
 import { WEBSITE } from '../config';
-import { DLPStatus, getDlpConfig, getDlpStatus } from '../services/dlp';
-import get from 'lodash/get';
+import { getDlpConfig, getDlpStatus } from '../services/dlp';
+import { DLPStatus } from '../types/dlp';
 
 export default function ActionsTopcoderController() {
   const buildWorkItemUrl = (id: string) => {

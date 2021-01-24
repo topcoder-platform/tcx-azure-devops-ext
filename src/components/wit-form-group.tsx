@@ -7,6 +7,7 @@ import get from 'lodash/get';
 import { ConditionalChildren } from 'azure-devops-ui/ConditionalChildren';
 
 import { getChallenge } from '../services/challenges';
+import { getDlpStatus } from '../services/dlp';
 import {
   challengeUrl,
   onlineReviewUrl,
@@ -14,9 +15,8 @@ import {
 } from '../utils/url-utils';
 import {
   DLPScannerResults,
-  DLPStatusLabel,
-  getDlpStatus
-} from '../services/dlp';
+  DLPStatusLabel
+} from '../types/dlp';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -163,44 +163,68 @@ export default function WITFormGroup() {
         {/* External Links */}
         <Box py={0.5}>
           <Box className={classes.label}>External Links</Box>
-          {!(topcoderChallengeLink || topcoderDirectLink || onlineReviewLink) && <Box mt={0.5} className={classes.value}>-</Box>}
-          {(topcoderChallengeLink && <Box mt={0.5} className={classes.value}>
-            <Link target="_blank" rel="noreferrer" className={classes.valueLink} href={topcoderChallengeLink}>Topcoder Challenge</Link>
-          </Box>)}
-          {(topcoderDirectLink && <Box mt={0.5} className={classes.value}>
-            <Link target="_blank" rel="noreferrer" className={classes.valueLink} href={topcoderDirectLink}>Topcoder Direct</Link>
-          </Box>)}
-          {(onlineReviewLink && <Box mt={0.5} className={classes.value}>
-            <Link target="_blank" rel="noreferrer" className={classes.valueLink} href={onlineReviewLink}>Online Review</Link>
-          </Box>)}
+          <ConditionalChildren renderChildren={!(topcoderChallengeLink || topcoderDirectLink || onlineReviewLink)}>
+            <Box mt={0.5} className={classes.value}>-</Box>
+          </ConditionalChildren>
+          <ConditionalChildren renderChildren={!!(topcoderChallengeLink)}>
+            <Box mt={0.5} className={classes.value}>
+              <Link target="_blank" rel="noreferrer" className={classes.valueLink} href={topcoderChallengeLink}>Topcoder Challenge</Link>
+            </Box>
+          </ConditionalChildren>
+          <ConditionalChildren renderChildren={!!(topcoderDirectLink)}>
+            <Box mt={0.5} className={classes.value}>
+              <Link target="_blank" rel="noreferrer" className={classes.valueLink} href={topcoderDirectLink}>Topcoder Direct</Link>
+            </Box>
+          </ConditionalChildren>
+          <ConditionalChildren renderChildren={!!(onlineReviewLink)}>
+            <Box mt={0.5} className={classes.value}>
+              <Link target="_blank" rel="noreferrer" className={classes.valueLink} href={onlineReviewLink}>Online Review</Link>
+            </Box>
+          </ConditionalChildren>
         </Box>
         <ConditionalChildren renderChildren={!!piiScannerResults}>
           <Box py={0.5}>
             <Box className={classes.label}>DLP Results</Box>
-            {(piiScannerResults?.dlpStatus && <Box className={classes.value}>
-              Workitem Status: { DLPStatusLabel[piiScannerResults!.dlpStatus] }
-            </Box>)}
-            {(piiScannerResults?.titleStatus?.status && <Box className={classes.value}>
-              Title: { DLPStatusLabel[piiScannerResults!.titleStatus.status] }
-            </Box>)}
-            {(piiScannerResults?.detailsStatus?.status && <Box className={classes.value}>
-              Details: { DLPStatusLabel[piiScannerResults!.detailsStatus.status] }
-            </Box>)}
-            {(piiScannerResults?.acceptanceCriteriaStatus?.status && <Box className={classes.value}>
-              Acceptance Criteria: { DLPStatusLabel[piiScannerResults!.acceptanceCriteriaStatus.status] }
-            </Box>)}
-            {(piiScannerResults?.reproductionStepsStatus?.status && <Box className={classes.value}>
-              Reproduction Steps: { DLPStatusLabel[piiScannerResults!.reproductionStepsStatus.status] }
-            </Box>)}
-            {(piiScannerResults?.descriptionStatus?.status && <Box className={classes.value}>
-              Description: { DLPStatusLabel[piiScannerResults!.descriptionStatus.status] }
-            </Box>)}
-            {(piiScannerResults?.systemInfoStatus?.status && <Box className={classes.value}>
-              System Info: { DLPStatusLabel[piiScannerResults!.systemInfoStatus.status] }
-            </Box>)}
-            {(piiScannerResults?.analysisStatus?.status && <Box className={classes.value}>
-              Analysis: { DLPStatusLabel[piiScannerResults!.analysisStatus.status] }
-            </Box>)}
+            <ConditionalChildren renderChildren={!!(piiScannerResults?.dlpStatus)}>
+              <Box className={classes.value}>
+                Workitem Status: { DLPStatusLabel[piiScannerResults!.dlpStatus] }
+              </Box>
+            </ConditionalChildren>
+            <ConditionalChildren renderChildren={!!(piiScannerResults?.titleStatus?.status)}>
+              <Box className={classes.value}>
+                Title: { DLPStatusLabel[piiScannerResults!.titleStatus.status] }
+              </Box>
+            </ConditionalChildren>
+            <ConditionalChildren renderChildren={!!(piiScannerResults?.detailsStatus?.status)}>
+              <Box className={classes.value}>
+                Details: { DLPStatusLabel[piiScannerResults!.detailsStatus.status] }
+              </Box>
+            </ConditionalChildren>
+            <ConditionalChildren renderChildren={!!(piiScannerResults?.acceptanceCriteriaStatus?.status)}>
+              <Box className={classes.value}>
+                Acceptance Criteria: { DLPStatusLabel[piiScannerResults!.acceptanceCriteriaStatus.status] }
+              </Box>
+            </ConditionalChildren>
+            <ConditionalChildren renderChildren={!!(piiScannerResults?.reproductionStepsStatus?.status)}>
+              <Box className={classes.value}>
+                Reproduction Steps: { DLPStatusLabel[piiScannerResults!.reproductionStepsStatus.status] }
+              </Box>
+            </ConditionalChildren>
+            <ConditionalChildren renderChildren={!!(piiScannerResults?.descriptionStatus?.status)}>
+              <Box className={classes.value}>
+                Description: { DLPStatusLabel[piiScannerResults!.descriptionStatus.status] }
+              </Box>
+            </ConditionalChildren>
+            <ConditionalChildren renderChildren={!!(piiScannerResults?.systemInfoStatus?.status)}>
+              <Box className={classes.value}>
+                System Info: { DLPStatusLabel[piiScannerResults!.systemInfoStatus.status] }
+              </Box>
+            </ConditionalChildren>
+            <ConditionalChildren renderChildren={!!(piiScannerResults?.analysisStatus?.status)}>
+              <Box className={classes.value}>
+                Analysis: { DLPStatusLabel[piiScannerResults!.analysisStatus.status] }
+              </Box>
+            </ConditionalChildren>
           </Box>
         </ConditionalChildren>
       </div>
