@@ -185,46 +185,30 @@ export default function WITFormGroup() {
         <ConditionalChildren renderChildren={!!piiScannerResults}>
           <Box py={0.5}>
             <Box className={classes.label}>DLP Results</Box>
-            <ConditionalChildren renderChildren={!!(piiScannerResults?.dlpStatus)}>
-              <Box className={classes.value}>
-                Workitem Status: { DLPStatusLabel[piiScannerResults!.dlpStatus] }
-              </Box>
-            </ConditionalChildren>
-            <ConditionalChildren renderChildren={!!(piiScannerResults?.titleStatus?.status)}>
-              <Box className={classes.value}>
-                Title: { DLPStatusLabel[piiScannerResults!.titleStatus.status] }
-              </Box>
-            </ConditionalChildren>
-            <ConditionalChildren renderChildren={!!(piiScannerResults?.detailsStatus?.status)}>
-              <Box className={classes.value}>
-                Details: { DLPStatusLabel[piiScannerResults!.detailsStatus.status] }
-              </Box>
-            </ConditionalChildren>
-            <ConditionalChildren renderChildren={!!(piiScannerResults?.acceptanceCriteriaStatus?.status)}>
-              <Box className={classes.value}>
-                Acceptance Criteria: { DLPStatusLabel[piiScannerResults!.acceptanceCriteriaStatus.status] }
-              </Box>
-            </ConditionalChildren>
-            <ConditionalChildren renderChildren={!!(piiScannerResults?.reproductionStepsStatus?.status)}>
-              <Box className={classes.value}>
-                Reproduction Steps: { DLPStatusLabel[piiScannerResults!.reproductionStepsStatus.status] }
-              </Box>
-            </ConditionalChildren>
-            <ConditionalChildren renderChildren={!!(piiScannerResults?.descriptionStatus?.status)}>
-              <Box className={classes.value}>
-                Description: { DLPStatusLabel[piiScannerResults!.descriptionStatus.status] }
-              </Box>
-            </ConditionalChildren>
-            <ConditionalChildren renderChildren={!!(piiScannerResults?.systemInfoStatus?.status)}>
-              <Box className={classes.value}>
-                System Info: { DLPStatusLabel[piiScannerResults!.systemInfoStatus.status] }
-              </Box>
-            </ConditionalChildren>
-            <ConditionalChildren renderChildren={!!(piiScannerResults?.analysisStatus?.status)}>
-              <Box className={classes.value}>
-                Analysis: { DLPStatusLabel[piiScannerResults!.analysisStatus.status] }
-              </Box>
-            </ConditionalChildren>
+            <Box className={classes.value}>
+              Workitem Status: { piiScannerResults?.dlpStatus && DLPStatusLabel[piiScannerResults!.dlpStatus] }
+            </Box>
+            <Box className={classes.value}>
+              Title: { piiScannerResults?.titleStatus?.status && DLPStatusLabel[piiScannerResults!.titleStatus.status] }
+            </Box>
+            <Box className={classes.value}>
+              Details: { piiScannerResults?.detailsStatus?.status && DLPStatusLabel[piiScannerResults!.detailsStatus.status] }
+            </Box>
+            <Box className={classes.value}>
+              Acceptance Criteria: { piiScannerResults?.acceptanceCriteriaStatus?.status && DLPStatusLabel[piiScannerResults!.acceptanceCriteriaStatus.status] }
+            </Box>
+            <Box className={classes.value}>
+              Reproduction Steps: { piiScannerResults?.reproductionStepsStatus?.status && DLPStatusLabel[piiScannerResults!.reproductionStepsStatus.status] }
+            </Box>
+            <Box className={classes.value}>
+              Description: { piiScannerResults?.descriptionStatus?.status && DLPStatusLabel[piiScannerResults!.descriptionStatus.status] }
+            </Box>
+            <Box className={classes.value}>
+              System Info: { piiScannerResults?.systemInfoStatus?.status && DLPStatusLabel[piiScannerResults!.systemInfoStatus.status] }
+            </Box>
+            <Box className={classes.value}>
+              Analysis: { piiScannerResults?.analysisStatus?.status && DLPStatusLabel[piiScannerResults!.analysisStatus.status] }
+            </Box>
           </Box>
         </ConditionalChildren>
       </div>
