@@ -37,8 +37,6 @@ The following config parameters are supported, they are defined in `src/config.j
 | TYPE_ID_TASK | TYPE_ID_TASK | Value of typeId - used when creating a new challenge | `927abff4-7af9-4145-8ba1-577c16e64e2e` |
 | DEFAULT_TIMELINE_TEMPLATE_ID | REACT_APP_DEFAULT_TIMELINE_TEMPLATE_ID | Value of timelineTemplateId - used when creating a new challenge | `7ebf1c69-f62f-4d3a-bdfb-fe9ddb56861c` |
 | DEFAULT_TRACK_ID | REACT_APP_DEFAULT_TRACK_ID | Value of trackId - used when creating a new challenge | `9b6fc876-f4d9-4ccb-9dfd-419247628825` |
-| DLP_ENDPOINT | REACT_APP_DLP_ENDPOINT | URL to the DLP API | `https://tcx-azure-devops-dlp-dhruvitr.azurewebsites.net/api/DLPTrigger` |
-| DLP_ENDPOINT_CODE | REACT_APP_DLP_ENDPOINT_CODE | Pre-shared code for the DLP API | `<private>` |
 
 ### Building extension package
 

@@ -14,9 +14,12 @@ import TablePagination from '@material-ui/core/TablePagination';
 import TableRow from '@material-ui/core/TableRow';
 import TableSortLabel from '@material-ui/core/TableSortLabel';
 import Paper from '@material-ui/core/Paper';
-import { fetchMemberProjects } from '../services/projects';
-import { formatDate } from '../utils/date-utils';
-import { directUrl, connectUrl } from '../utils/url-utils';
+import { fetchMemberProjects } from '../../services/projects';
+import { formatDate } from '../../utils/date-utils';
+import { directUrl, connectUrl } from '../../utils/url-utils';
+import { Header } from 'azure-devops-ui/Header';
+import { Page } from 'azure-devops-ui/Page';
+import { NewProjectDialog } from './dialogs/new-project-dialog';
 
 function descendingComparator(a: any, b: any, orderBy: string) {
   if (b[orderBy] < a[orderBy]) {
@@ -101,8 +104,8 @@ const useStyles = makeStyles((theme) => ({
     width: '100%',
   },
   paper: {
-    width: '100%',
-    marginBottom: theme.spacing(2),
+    width: 'calc(100% - 32px)',
+    margin: theme.spacing(2),
   },
   table: {
     minWidth: 500,
@@ -124,6 +127,12 @@ const useStyles = makeStyles((theme) => ({
     top: 20,
     width: 1,
   },
+  pageHeader: {
+    padding: '0 !important',
+    '& .bolt-header-commandbar': {
+      alignSelf: 'center'
+    }
+  },
 }));
 
 function ProjectsTable() {
@@ -133,25 +142,31 @@ function ProjectsTable() {
   const [selected, setSelected] = React.useState<any[]>([]);
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
-  const [data, setData] = React.useState([]);
+  const [data, setData] = React.useState<any[]>([]);
+  const [refreshData, setRefreshData] = React.useState(true);
+  const [isAddProjectModalVisible, setIsAddProjectModalVisible] = React.useState(false);
 
   React.useEffect(() => {
-    const filters = {
-      sort: 'lastActivityAt desc',
-      memberOnly: false
-    };
+    (async () => {
+      if (!refreshData) {
+        return;
+      }
+      const filters = {
+        sort: 'lastActivityAt desc',
+        memberOnly: false
+      };
 
-    fetchMemberProjects(filters)
-      .then(projects => {
-        console.log(projects);
-
+      try {
+        setData([]);
+        const projects = await fetchMemberProjects(filters);
         setData(projects);
-      })
-      .catch((e) => {
+        setRefreshData(false);
+      } catch (e) {
         console.error(e);
         alert('Failed to fetch projects. ' + e.message);
-    });
-  }, []);
+      }
+    })();
+  }, [refreshData]);
 
   const handleRequestSort = (event: any, property: string) => {
     const isAsc = orderBy === property && order === 'asc';
@@ -188,8 +203,30 @@ function ProjectsTable() {
     setPage(0);
   };
 
+  const onAddProjectModalDismissed = async () => {
+    setIsAddProjectModalVisible(false);
+    setRefreshData(true);
+  };
+
   return (
-    <div className={classes.root}>
+    <Page className={classes.root}>
+        {/* Page Header */}
+        <Header
+          className={classes.pageHeader}
+          title={<h1>Projects</h1>}
+          commandBarItems={[
+            {
+              id: 'add-button',
+              text: 'Add Project',
+              iconProps: {
+                iconName: 'Add',
+              },
+              isPrimary: true,
+              important: true,
+              onActivate: () => setIsAddProjectModalVisible(true)
+            }
+          ]}
+        />
       <Paper className={classes.paper}>
         <TableContainer>
           <Table
@@ -241,7 +278,11 @@ function ProjectsTable() {
           onChangeRowsPerPage={handleChangeRowsPerPage}
         />
       </Paper>
-    </div>
+      <NewProjectDialog
+        isOpen={isAddProjectModalVisible}
+        onClose={() => onAddProjectModalDismissed()}
+      />
+    </Page>
   );
 }
 
