@@ -3,7 +3,7 @@ export interface DLPConfig {
   dlpForCode: boolean;
   blockChallengeCreation: boolean;
   dlpEndpoint: string;
-  dlpEndpointCode: string;
+  webHooks: string[]
 }
 
 export enum DLPStatus {

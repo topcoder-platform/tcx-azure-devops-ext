@@ -136,7 +136,6 @@ export default function AccountTab() {
           const pollingFn = getDeviceToken.bind(null, response.data.device_code);
           try {
             const res = await poll(pollingFn, POLL_INTERVAL, POLL_TIMEOUT);
-            debugger;
             setLoggedIn(true);
             getProjects();
             setLoading(false);

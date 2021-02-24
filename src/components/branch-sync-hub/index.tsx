@@ -62,12 +62,22 @@ const useStyles = makeStyles({
   }
 });
 
-const defaultState = {
+export interface BranchSyncHubDocument {
+  githubToken: string
+  gitlabToken: string
+  azurePersonalAccessToken: string
+  branchSyncConfigs: IBranchSyncConfig[]
+};
+
+const defaultState: BranchSyncHubDocument = {
   githubToken: '',
   gitlabToken: '',
   azurePersonalAccessToken: '',
   branchSyncConfigs: []
 };
+
+
+export const getBranchSyncHubConfigKey = () => `${VSS.getWebContext().project.id}_BRANCH_SYNC_HUB_STATE`;
 
 export default function BranchSyncHub() {
   // Styles
@@ -100,12 +110,6 @@ export default function BranchSyncHub() {
   const [branchSyncConfigs, setBranchSyncConfigs] = useState<IBranchSyncConfig[]>(defaultState.branchSyncConfigs);
 
   // Tracks the document value
-  interface BranchSyncHubDocument {
-    githubToken: typeof githubToken;
-    gitlabToken: typeof gitlabToken;
-    azurePersonalAccessToken: typeof azurePersonalAccessToken
-    branchSyncConfigs: typeof branchSyncConfigs
-  };
   const [document, setDocument] = useState<BranchSyncHubDocument | null>(null);
 
   /**
@@ -115,10 +119,8 @@ export default function BranchSyncHub() {
     async function initFields() {
       // Get Extension Data service.
       const dataService = await VSS.getService<IExtensionDataService>(VSS.ServiceIds.ExtensionData);
-      // Project ID is used as prefix in all field keys, store it as constant.
-      const ctxProjectId = VSS.getWebContext().project.id;
-      // Retrieve state variables.
-      const docName = `${ctxProjectId}_BRANCH_SYNC_HUB_STATE`;
+      // Retrieve Doc Name
+      const docName = getBranchSyncHubConfigKey();
       // Set up document tracking variable.
       try {
         const doc = await dataService.getValue<BranchSyncHubDocument>(docName, { scopeType: 'User' });
@@ -139,10 +141,8 @@ export default function BranchSyncHub() {
     async function saveDocument() {
       // Get Extension Data service.
       const dataService = await VSS.getService<IExtensionDataService>(VSS.ServiceIds.ExtensionData);
-      // Project ID is used as prefix in all field keys, store it as constant.
-      const ctxProjectId = VSS.getWebContext().project.id;
       // Retrieve doc info from current state.
-      const docName = `${ctxProjectId}_BRANCH_SYNC_HUB_STATE`;
+      const docName = getBranchSyncHubConfigKey();
       const docValue: BranchSyncHubDocument = {
         githubToken,
         gitlabToken,
@@ -348,7 +348,7 @@ export default function BranchSyncHub() {
   function showAzurePatDialog() {
     setTokenDialogState({
       isOpen: true,
-      mode: 'ADO',
+      mode: 'ADO-Pipeline',
       externalLink: `${VSS.getWebContext().account.uri}_usersSettings/tokens`,
       onClose: (val) => {
         if (val) {

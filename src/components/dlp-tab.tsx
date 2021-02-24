@@ -2,11 +2,21 @@ import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
-import isEqual from 'lodash/isEqual';
 import { Checkbox, FormControl, FormControlLabel, FormGroup } from '@material-ui/core';
+import isEqual from 'lodash/isEqual';
+import omit from 'lodash/omit';
 
-import { defaultDlpConfig, getDlpConfig, saveDlpConfig } from '../services/dlp';
+import { defaultDlpConfig, getDlpConfig, saveAzurePatToken, saveDlpConfig } from '../services/dlp';
 import { DLPConfig } from '../types/dlp';
+import { AlertDialog, getDefaultState as getAlertDialogDefaultState } from './branch-sync-hub/dialogs/alert-dialog';
+import {
+  getDefaultState as getTokenDialogDefaultState,
+  TokenDialog
+} from './branch-sync-hub/dialogs/token-dialog';
+import { setAzurePatToken } from '../services/ado-web-hooks';
+import { LoadingDialog } from './branch-sync-hub/dialogs/loading-dialog';
+
+type DlpConfigWithoutWebHooks = Omit<DLPConfig, 'webHooks'>
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -33,23 +43,27 @@ const useStyles = makeStyles((theme) => ({
 
 export default function DLPConfigTab() {
   const classes = useStyles();
-  const [document, setDocument] = React.useState<DLPConfig | null>(null);
+  const [document, setDocument] = React.useState<DlpConfigWithoutWebHooks | null>(null);
   const [dlpForWorkItems, setDlpForWorkItem] = React.useState(defaultDlpConfig.dlpForWorkItems);
   const [dlpForCode, setDlpForCode] = React.useState(defaultDlpConfig.dlpForCode);
   const [blockChallengeCreation, setBlockChallengeCreation] = React.useState(defaultDlpConfig.blockChallengeCreation);
   const [dlpEndpoint, setDlpEndpoint] = React.useState(defaultDlpConfig.dlpEndpoint);
-  const [dlpEndpointCode, setDlpEndpointCode] = React.useState(defaultDlpConfig.dlpEndpointCode);
   const [isEdited, setIsEdited] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [azurePersonalAccessToken, setAzurePersonalAccessToken] = React.useState('');
+  const [tokenDialogState, setTokenDialogState] = React.useState(getTokenDialogDefaultState());
+  const [alertDialogState, setAlertDialogState] = React.useState(getAlertDialogDefaultState());
 
   React.useEffect(() => {
     (async () => {
       const dlpConfig = await getDlpConfig();
-      setDocument(dlpConfig);
       setDlpForWorkItem(dlpConfig.dlpForWorkItems);
       setDlpForCode(dlpConfig.dlpForCode);
       setBlockChallengeCreation(dlpConfig.blockChallengeCreation);
       setDlpEndpoint(dlpConfig.dlpEndpoint);
-      setDlpEndpointCode(dlpConfig.dlpEndpointCode);
+      setAzurePersonalAccessToken(dlpConfig.azurePersonalAccessToken);
+      setDocument(omit(dlpConfig, ['webHooks', 'azurePersonalAccessToken']));
+      setIsLoading(false);
     })();
   }, []);
 
@@ -57,23 +71,36 @@ export default function DLPConfigTab() {
     const newDocument = {
       blockChallengeCreation,
       dlpEndpoint,
-      dlpEndpointCode,
       dlpForCode,
       dlpForWorkItems
     };
     setIsEdited(!isEqual(document, newDocument));
-  }, [document, dlpForWorkItems, dlpForCode, blockChallengeCreation, dlpEndpoint, dlpEndpointCode]);
+  }, [document, dlpForWorkItems, dlpForCode, blockChallengeCreation, dlpEndpoint]);
 
   const handleSaveButtonClick = async () => {
-    const newDocValue = {
-      dlpForWorkItems,
-      dlpForCode,
-      blockChallengeCreation,
-      dlpEndpoint,
-      dlpEndpointCode
-    };
-    setDocument(newDocValue);
-    saveDlpConfig(newDocValue);
+    try {
+      let _azurePat: string = azurePersonalAccessToken;
+      if (!_azurePat) {
+        _azurePat = await showAzurePatDialog();
+      }
+      if (!_azurePat) {
+        return;
+      }
+      setIsLoading(true);
+      await setAzurePatToken(_azurePat);
+      const newDocValue: DlpConfigWithoutWebHooks = {
+        dlpForWorkItems,
+        dlpForCode,
+        blockChallengeCreation,
+        dlpEndpoint
+      };
+      await saveDlpConfig(newDocValue);
+      setDocument(newDocValue);
+      setIsLoading(false);
+    } catch (err) {
+      console.error(err);
+      showDLPEnableFailureDialog();
+    }
   };
 
   const handleDiscardButtonClick = async () => {
@@ -81,25 +108,61 @@ export default function DLPConfigTab() {
     setDlpForCode(document?.dlpForCode!);
     setBlockChallengeCreation(document?.blockChallengeCreation!);
     setDlpEndpoint(document?.dlpEndpoint!);
-    setDlpEndpointCode(document?.dlpEndpointCode!);
   };
 
-  return (
+  /**
+   * Shows a dialog that accepts an Azure PAT token
+   */
+   async function showAzurePatDialog(): Promise<string> {
+     return new Promise(resolve => {
+       setTokenDialogState({
+         isOpen: true,
+         mode: 'ADO-DLP',
+         externalLink: `${VSS.getWebContext().account.uri}_usersSettings/tokens`,
+         onClose: (val) => {
+            if (val) {
+              setAzurePersonalAccessToken(val);
+              saveAzurePatToken(val);
+            }
+            setTokenDialogState(val => ({
+              ...val,
+              isOpen: false
+            }));
+            resolve(val || '');
+          }
+        });
+    });
+  }
+
+  /**
+   * Show the failure dialog
+   */
+   function showDLPEnableFailureDialog() {
+    setAlertDialogState({
+      isOpen: true,
+      text: (
+        <p>Uh oh! Error occurred while trying to set up DLP web hooks. Please try again.</p>
+      ),
+      title: 'DLP Setup Error',
+      onClose: () => {
+        setAlertDialogState((val) => ({ ...val, isOpen: false }));
+      },
+      danger: true,
+      primaryButtonText: 'OK',
+      secondaryButtonText: '',
+    });
+  }
+
+  return (<>
     <div className={classes.root}>
       <div>
         <TextField
           label="DLP Endpoint"
           value={dlpEndpoint}
           className={classes.text}
+          placeholder='https://dlp-site.com/api/DLPTrigger?code=123123123'
           onChange={e => setDlpEndpoint(e.target.value)}
-        />
-      </div>
-      <div>
-        <TextField
-          label="DLP Endpoint Code"
-          value={dlpEndpointCode}
-          className={classes.text}
-          onChange={e => setDlpEndpointCode(e.target.value)}
+          disabled={isLoading}
         />
       </div>
       <div>
@@ -112,6 +175,7 @@ export default function DLPConfigTab() {
                 color="primary"
                 onChange={(_e, checked) => setDlpForWorkItem(checked)}
                 checked={dlpForWorkItems}
+                disabled={isLoading}
               />}
             />
           </FormGroup>
@@ -127,6 +191,7 @@ export default function DLPConfigTab() {
                 color="primary"
                 onChange={(_e, checked) => setDlpForCode(checked)}
                 checked={dlpForCode}
+                disabled={isLoading}
               />}
             />
           </FormGroup>
@@ -142,6 +207,7 @@ export default function DLPConfigTab() {
                 color="primary"
                 onChange={(_e, checked) => setBlockChallengeCreation(checked)}
                 checked={blockChallengeCreation}
+                disabled={isLoading}
               />}
             />
           </FormGroup>
@@ -153,7 +219,7 @@ export default function DLPConfigTab() {
           variant="contained"
           color="primary"
           onClick={handleSaveButtonClick}
-          disabled={!isEdited}
+          disabled={!isEdited || !dlpEndpoint || isLoading}
           children={'Save'}
         />
         <Button
@@ -161,10 +227,16 @@ export default function DLPConfigTab() {
           variant="contained"
           color="primary"
           onClick={handleDiscardButtonClick}
-          disabled={!isEdited}
+          disabled={!isEdited || isLoading}
           children={'Discard'}
         />
       </div>
     </div>
-  );
+    {/* Azure PAT Token */}
+    <TokenDialog {...tokenDialogState} />
+    {/* Alert Dialog */}
+    <AlertDialog {...alertDialogState} />
+    {/* Simple Loading Dialog */}
+    <LoadingDialog open={isLoading} />
+  </>);
 }
