@@ -8,7 +8,7 @@ export interface ITokenDialogProps {
   isOpen: boolean;
   onClose: (success?: string) => any;
   externalLink: string;
-  mode: 'GitLab' | 'ADO';
+  mode: 'GitLab' | 'ADO-Pipeline' | 'ADO-DLP';
 }
 
 export function getDefaultState(): ITokenDialogProps {
@@ -41,14 +41,25 @@ const useStyles = makeStyles({
   }
 });
 
-const composeTextData = (mode: ITokenDialogProps["mode"], context: any) => ({
-  title: mode === 'ADO'
-    ? 'Azure Personal Access Token'
-    : 'GitLab Personal Access Token',
-  introPara: mode === 'ADO'
-    ? 'The Personal Access Token is required to allow the GitHub commits to be pushed to your selected Azure DevOps repo.'
-    : 'The Personal Access Token is required to set up the GitLab CI Pipeline.',
-}) as typeof defaultTextData;
+
+const composeTextData = (mode: ITokenDialogProps["mode"]) => {
+  const copies = {
+    title: {
+      'GitLab': 'GitLab Personal Access Token',
+      'ADO-Pipeline': 'Azure Personal Access Token',
+      'ADO-DLP': 'Azure Personal Access Token'
+    },
+    introPara: {
+      'GitLab': 'The Personal Access Token is required to set up the GitLab CI Pipeline.',
+      'ADO-Pipeline': 'The Personal Access Token is required to allow the GitHub commits to be pushed to your selected Azure DevOps repo.',
+      'ADO-DLP': 'The Personal Access Token is required to setup the service hooks.'
+    }
+  };
+  return {
+    title: copies.title[mode],
+    introPara: copies.introPara[mode]
+  } as typeof defaultTextData;
+};
 
 const defaultTextData = {
   title: '',
@@ -62,9 +73,7 @@ export function TokenDialog(props: ITokenDialogProps) {
   const [textData, setTextData] = useState(defaultTextData);
 
   useEffect(() => {
-    setTextData(composeTextData(props.mode, {
-      externalLink: props.externalLink
-    }));
+    setTextData(composeTextData(props.mode));
   }, [props.externalLink, props.mode]);
 
   return (

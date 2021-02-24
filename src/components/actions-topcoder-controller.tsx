@@ -89,7 +89,6 @@ export default function ActionsTopcoderController() {
                 return;
               }
               const workItemId = value["System.Id"];
-              debugger;
               const dlpCheck = await checkDlpStatus(workItemId);
               if (!dlpCheck) {
                 alert('DLP scanning failed. Please fix the issue and try again.');
