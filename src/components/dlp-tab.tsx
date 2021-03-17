@@ -96,10 +96,11 @@ export default function DLPConfigTab() {
       };
       await saveDlpConfig(newDocValue);
       setDocument(newDocValue);
-      setIsLoading(false);
     } catch (err) {
       console.error(err);
       showDLPEnableFailureDialog();
+    } finally {
+      setIsLoading(false);
     }
   };
 
