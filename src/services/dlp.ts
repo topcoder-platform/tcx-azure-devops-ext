@@ -54,15 +54,15 @@ const checkDlpEndpoint = async (dlpConfig: DLPConfig) => {
   const _uuid = uuid();
   try {
     const res = await axios({
-      method: 'HANDSHAKE' as any,
+      method: 'OPTIONS',
       url: dlpConfig.dlpEndpoint,
       headers: {
         'x-handshake-request-data': _uuid
       }
     });
     const uuidHash = sha256(_uuid).toString();
-    const handhakeResponse = res.headers['x-handshake-response-data'];
-    return uuidHash === handhakeResponse;
+    const handshakeResponse = res.headers['x-handshake-response-data'];
+    return uuidHash === handshakeResponse;
   } catch (err) {
     console.error(err);
     return false;
