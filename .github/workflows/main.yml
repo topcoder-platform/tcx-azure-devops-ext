@@ -44,7 +44,7 @@ jobs:
           mv build/ vss-extension/
           cd vss-extension/
           npm install
-          echo '${{ secrets.PERSONAL_ACCESS_TOKEN }}' | tfx extension publish --publisher ${{ secrets.PUBLISHER }} --manifest-globs vss-extension.json --share-with ${{ secrets.SHARED_ACCOUNT }} --rev-version
+          echo '${{ secrets.PERSONAL_ACCESS_TOKEN }}' | tfx extension publish --publisher ${{ secrets.PUBLISHER_PROD }} --manifest-globs vss-extension.json --share-with ${{ secrets.SHARED_ACCOUNT }} --rev-version
           cd ..
           git config --global user.name 'Topcoder X'
           git config --global user.email 'tcx@topcoder.com'
