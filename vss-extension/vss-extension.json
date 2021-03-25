@@ -7,6 +7,9 @@
     "description": "Topcoder X is an application used by copilots to manage direct tasks.",
     "public": false,
     "categories": ["Azure Repos", "Azure Boards"],
+    "icons": {
+        "default": "images/extension-icon.png"        
+    },
     "targets": [
         {
             "id": "Microsoft.VisualStudio.Services"
