@@ -2,11 +2,14 @@
     "manifestVersion": 1,
     "id": "topcoder-x",
     "publisher": "Topcoder",
-    "version": "1.0.104",
+    "version": "1.0.105",
     "name": "Topcoder X",
     "description": "Topcoder X is an application used by copilots to manage direct tasks.",
     "public": false,
     "categories": ["Azure Repos", "Azure Boards"],
+    "icons": {
+        "default": "images/extension-icon.png"        
+    },
     "targets": [
         {
             "id": "Microsoft.VisualStudio.Services"
