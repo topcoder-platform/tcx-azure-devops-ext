@@ -4,7 +4,8 @@ import {
   WEBSITE,
   WEBSITE_CONNECT,
   CHALLENGE_DIRECT_LINK_TEMPLATE,
-  CHALLENGE_ONLINE_REVIEW_LINK_TEMPLATE
+  CHALLENGE_ONLINE_REVIEW_LINK_TEMPLATE,
+  WORK_MANAGER
 } from '../config';
 
 /**
@@ -21,6 +22,14 @@ export function directUrl(directProjectId: string) {
  */
 export function connectUrl(id: string) {
   return `${WEBSITE_CONNECT}/projects/${id}`;
+}
+
+/**
+ * Generate work manager url for given project id and challenge id
+ * @param id
+ */
+export function workManagerUrl(projectId: string, challengeId: string) {
+  return `${WORK_MANAGER}/projects/${projectId}/challenges/${challengeId}/view`;
 }
 
 /**

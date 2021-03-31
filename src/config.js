@@ -1,6 +1,7 @@
 export const DOMAIN = process.env.REACT_APP_DOMAIN || 'topcoder-dev.com';
 export const WEBSITE = `https://www.${DOMAIN}`;
 export const WEBSITE_CONNECT = `https://connect.${DOMAIN}`;
+export const WORK_MANAGER = `https://challenges.${DOMAIN}`;
 export const DEV_API_HOSTNAME = `https://api.${DOMAIN}`;
 export const PROJECT_API_URL = `${DEV_API_HOSTNAME}/v5/projects`;
 export const CHALLENGE_API_URL = `${DEV_API_HOSTNAME}/v5/challenges`;

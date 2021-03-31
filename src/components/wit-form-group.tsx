@@ -11,7 +11,8 @@ import { getDlpStatus } from '../services/dlp';
 import {
   challengeUrl,
   onlineReviewUrl,
-  challengeDirectUrl
+  challengeDirectUrl,
+  workManagerUrl
 } from '../utils/url-utils';
 import {
   DLPScannerResults,
@@ -62,6 +63,7 @@ export default function WITFormGroup() {
   const [topcoderDirectLink, setTopcoderDirectLink] = React.useState('');
   const [topcoderChallengeLink, setTopcoderChallengeLink] = React.useState('');
   const [onlineReviewLink, setOnlineReviewLink] = React.useState('');
+  const [workManagerLink, setWorkManagerLink] = React.useState('');
   const [id, setId] = React.useState(0);
   const [piiScannerResults, setPiiScannerResults] = React.useState<DLPScannerResults | null>(null);
 
@@ -81,14 +83,18 @@ export default function WITFormGroup() {
       // Get values for challenge ID and legacy ID fields.
       const dataKeys = {
         challengeIdKey: `${ctxProjectId}_${id}`,
-        legacyChallengeIdKey: `${ctxProjectId}_${id}_LEGACY_ID`
+        legacyChallengeIdKey: `${ctxProjectId}_${id}_LEGACY_ID`,
+        projectIdKey: `${ctxProjectId}_${id}_TC_PROJECT`
       };
-      let res = await dataService.getValues([dataKeys.challengeIdKey, dataKeys.legacyChallengeIdKey], {scopeType: 'User'});
-      const cId = res[dataKeys.challengeIdKey];
+      let res = await dataService.getValues(Object.values(dataKeys), {scopeType: 'User'});
+      const challengeId = res[dataKeys.challengeIdKey];
+      const projectId = res[dataKeys.projectIdKey];
       let legacyId = res[dataKeys.legacyChallengeIdKey];
       // Fetch legacy ID from TC API if it doesn't exist, and store it in Extension Data
-      if (cId && cId !== '-' && !legacyId) {
-        res = await getChallenge(cId);
+      res = await getChallenge(challengeId);
+      console.log(res);
+      if (challengeId && challengeId !== '-' && !legacyId) {
+        res = await getChallenge(challengeId);
         legacyId = get(res, 'data.legacyId');
         if (legacyId) {
           await dataService.setValue(`${`${ctxProjectId}_${id}`}_LEGACY_ID`, legacyId, {scopeType: 'User'});
@@ -101,9 +107,12 @@ export default function WITFormGroup() {
         setOnlineReviewLink(onlineReviewUrl(legacyId));
       }
       // Set Challenge ID label and Challenge ID-related links
-      if (cId) {
-        setTopcoderChallengeLink(challengeUrl(cId));
-        setChallengeId(cId);
+      if (challengeId) {
+        setTopcoderChallengeLink(challengeUrl(challengeId));
+        setChallengeId(challengeId);
+      }
+      if (challengeId && projectId) {
+        setWorkManagerLink(workManagerUrl(projectId, challengeId));
       }
       VSS.notifyLoadSucceeded();
     }
@@ -179,6 +188,11 @@ export default function WITFormGroup() {
           <ConditionalChildren renderChildren={!!(onlineReviewLink)}>
             <Box mt={0.5} className={classes.value}>
               <Link target="_blank" rel="noreferrer" className={classes.valueLink} href={onlineReviewLink}>Online Review</Link>
+            </Box>
+          </ConditionalChildren>
+          <ConditionalChildren renderChildren={!!(workManagerLink)}>
+            <Box mt={0.5} className={classes.value}>
+              <Link target="_blank" rel="noreferrer" className={classes.valueLink} href={workManagerLink}>Work Manager</Link>
             </Box>
           </ConditionalChildren>
         </Box>
