@@ -64,16 +64,6 @@ jobs:
           DEFAULT_TERMS_ID: ${{ secrets.PROD_DEFAULT_TERMS_ID }}
           DEFAULT_ROLE_ID: ${{ secrets.PROD_DEFAULT_ROLE_ID }}
         run: |
-          echo NODE_ENV $NODE_ENV
-          echo REACT_APP_DOMAIN $REACT_APP_DOMAIN
-          echo REACT_APP_HOST_URL $REACT_APP_HOST_URL
-          echo REACT_APP_AUTH0_URL: $REACT_APP_AUTH0_URL
-          echo REACT_APP_AUTH0_CLIENT_ID: $REACT_APP_AUTH0_CLIENT_ID
-          echo REACT_APP_AUTH0_SCOPE: $REACT_APP_AUTH0_SCOPE
-          echo REACT_AUTH0_AUDIENCE: $REACT_AUTH0_AUDIENCE
-          echo GITHUB_CLIENT_ID: $GITHUB_CLIENT_ID
-          echo DEFAULT_TERMS_ID: $DEFAULT_TERMS_ID
-          echo DEFAULT_ROLE_ID: $DEFAULT_ROLE_ID
           npm i -g tfx-cli
           npm install
           node scripts/build.js
